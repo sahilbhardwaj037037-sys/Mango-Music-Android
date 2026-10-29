@@ -29,7 +29,7 @@ data class ResolvedAudio(val uri: String, val mimeType: String, val headers: Map
 data class OnlineSearchState(val query: String = "", val loading: Boolean = false, val tracks: List<Track> = emptyList(), val error: String? = null)
 
 /** Catalog metadata and transient audio resolution are separate; no resolved URL is persisted. */
-class OnlineRepository(context: Context) {
+class OnlineRepository(context: Context): RecommendationProvider {
     private val runtime = YtDlpRuntime(context.applicationContext)
     private val executor = Executors.newFixedThreadPool(3)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -80,12 +80,38 @@ class OnlineRepository(context: Context) {
     suspend fun search(query: String): List<Track> {
         val term = query.trim()
         require(term.isNotBlank() && term.length <= 200 && term.none { it.isISOControl() })
-        val array = call("search",term).getJSONArray("tracks")
+        return tracks(call("search",term))
+    }
+    private fun tracks(json: JSONObject): List<Track> {
+        val array=json.getJSONArray("tracks")
         return (0 until array.length()).map { index ->
             val item=array.getJSONObject(index)
             Track(item.getString("id"),item.getString("title"),item.getString("artist"),item.getString("uri"),
                 item.optLong("durationMs"),false,item.optString("thumbnailUrl").takeIf { it.startsWith("https://") })
         }.distinctBy { it.id }
+    }
+    override suspend fun recommendations(seed: Track, excluded: Set<String>): RecommendationBatch {
+        if (offline.value) throw OnlineFailure("offline")
+        require(seed.id.matches(Regex("youtube:[A-Za-z0-9_-]{11}")))
+        fun usable(items:List<Track>)=com.mangomusic.domain.MixPolicy.select(items,listOf(seed),excluded,20)
+        try {
+            val radio=usable(withTimeout(12000) { tracks(call("mix",seed.id.removePrefix("youtube:"))) })
+            if (radio.isNotEmpty()) return RecommendationBatch(radio,"YouTube radio")
+        } catch (_: TimeoutCancellationException) { /* Bounded public-search fallback. */ }
+        catch (e: CancellationException) { throw e }
+        catch (_: Exception) { /* Provider radio is not always available anonymously. */ }
+        if (offline.value) throw OnlineFailure("offline")
+        val artist=seed.artist.takeUnless { it.equals("YouTube",true) || it.isBlank() }
+        val queries=listOfNotNull(artist?.let { "$it songs music" },"${seed.title} ${artist.orEmpty()} music").distinct()
+        val found=mutableListOf<Track>()
+        for (query in queries) {
+            try { found+=usable(withTimeout(15000) { search(query.take(200).filterNot { it.isISOControl() }) }) }
+            catch(e:TimeoutCancellationException) { if(found.isEmpty())throw e }
+            catch(e:CancellationException) { throw e }
+            catch(e:Exception) { if(found.isEmpty())throw e }
+            if (found.size>=5) break
+        }
+        return RecommendationBatch(found.distinctBy { it.id },"Related search")
     }
     suspend fun resolve(id: String): ResolvedAudio {
         if (offline.value) throw OnlineFailure("offline")

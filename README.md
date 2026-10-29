@@ -35,6 +35,7 @@ APK: `app/build/outputs/apk/debug/app-debug.apk`.
 - Search the local library and three bundled original demos, or select Online to search permitted public YouTube audio by title/artist/keywords.
 - Import audio using Android's document picker. Imported files are copied into the app and remain available offline.
 - Add a direct HTTPS audio link to stream your own audio. Check the download permission box only for files you are authorized to save, then use the track menu to download.
+- Enable **Mix** in Online search, Up Next or Now Playing to continue with related music after manual queue entries. [Mix behavior and validation](docs/MIX_AUTOPLAY.md).
 - Tap a track to play the visible list; use its menu to enqueue or play next. Up Next supports selecting/removing queue entries.
 - Tap the persistent mini player to open Now Playing. The branded vinyl turns during actual playback and keeps its angle while paused.
 - Use Settings for System/Light/Dark and Offline Mode. Switching offline stops and clears the current queue.

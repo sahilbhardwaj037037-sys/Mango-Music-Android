@@ -274,9 +274,10 @@ private fun LibraryScreen(
                         focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(selected = !onlineSelected || offline, onClick = { selectOnline(false) }, label = { Text("Library") })
                     FilterChip(selected = onlineSelected && !offline, onClick = { selectOnline(true) }, enabled = !offline, label = { Text("Online") })
+                    if(onlineSelected) MixToggle(vm,offline)
                 }
                 // FlowRow keeps both 48dp actions accessible at narrow widths / large font scales.
                 if (!onlineSelected || offline) FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -287,6 +288,10 @@ private fun LibraryScreen(
                 Text(destination, Modifier.weight(1f).semantics { heading() }, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
                 if (destination == "History" && visible.isNotEmpty()) TextButton(onClick = clearHistory) { Text("Clear") }
                 if (destination == "Favorites" && visible.isNotEmpty()) TextButton(onClick = { vm.play(visible.first(), visible) }) { Text("Play all") }
+            }
+            if(destination=="Up Next") {
+                MixToggle(vm,offline)
+                MixStatusLine(vm)
             }
             if (offline) TextButton(onClick = settings, contentPadding = PaddingValues(horizontal = 4.dp)) {
                 Icon(Icons.Outlined.OfflineBolt, null, Modifier.size(16.dp))
@@ -308,9 +313,9 @@ private fun LibraryScreen(
         itemsIndexed(visible, key = { index, track -> if (destination == "Up Next") "$index:${track.id}" else track.id }) { index, track ->
             val stored = saved.find { it.id == track.id }
             TrackRow(track, stored, playback.id == track.id, destination == "Up Next", destination == "History", playback.connected, offline,
-                onPlay = { if (destination == "Up Next") vm.queuePlay(index) else vm.play(track, visible) },
+                onPlay = { if (destination == "Up Next") vm.queuePlay(index) else vm.play(track, if(destination=="Search" && onlineSelected && vm.mixEnabled.value) listOf(track) else visible) },
                 onFavorite = { vm.favorite(track) }, onQueue = { vm.enqueue(track) }, onNext = { vm.enqueue(track, true) },
-                onRemove = { vm.remove(index) }, onDownload = { vm.download(track) })
+                onRemove = { vm.remove(index) }, onDownload = { vm.download(track) }, automatic = destination=="Up Next" && index in playback.automaticEntries)
             HorizontalDivider(Modifier.padding(start = 40.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .55f))
         }
     }
@@ -319,7 +324,7 @@ private fun LibraryScreen(
 @Composable
 private fun TrackRow(
     track: Track, saved: SavedTrack?, selected: Boolean, queued: Boolean, showHistory: Boolean, connected: Boolean, offline: Boolean,
-    onPlay: () -> Unit, onFavorite: () -> Unit, onQueue: () -> Unit, onNext: () -> Unit, onRemove: () -> Unit, onDownload: () -> Unit
+    onPlay: () -> Unit, onFavorite: () -> Unit, onQueue: () -> Unit, onNext: () -> Unit, onRemove: () -> Unit, onDownload: () -> Unit, automatic: Boolean=false
 ) {
     var menu by remember { mutableStateOf(false) }
     Surface(shape = RoundedCornerShape(6.dp), color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = .06f) else Color.Transparent) {
@@ -333,7 +338,7 @@ private fun TrackRow(
                     color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
                 Spacer(Modifier.height(3.dp))
                 Text(track.artist, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (track.id.startsWith("youtube:")) Text(if (offline) "Online · not saved offline" else "Online", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (track.id.startsWith("youtube:")) Text(if (offline) "Online · not saved offline" else if(automatic) "Mix" else "Online", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (saved != null && saved.downloadId != 0L) Text("Downloading…", style = MaterialTheme.typography.labelSmall)
                 if (saved?.downloadError != null) Text(saved.downloadError, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall)
                 if (saved?.localUri != null || track.uri.startsWith("file:")) Text("Saved offline", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -398,6 +403,8 @@ private fun NowPlaying(
     track: Track?, state: PlaybackState, vm: MusicViewModel, angle: MutableFloatState, favorite: Boolean,
     wide: Boolean, close: () -> Unit, queue: () -> Unit
 ) {
+    val mixEnabled by vm.mixEnabled.collectAsStateWithLifecycle()
+    val offline by vm.offline.collectAsStateWithLifecycle()
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     LaunchedEffect(state.playing, lifecycle) {
         if (state.playing) lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -448,13 +455,14 @@ private fun NowPlaying(
                 ModeButton(if (state.repeat == Player.REPEAT_MODE_ONE) Icons.Outlined.RepeatOne else Icons.Outlined.Repeat,
                     "Repeat ${when (state.repeat) { 1 -> "One"; 2 -> "All"; else -> "Off" }}", state.repeat != 0, vm::repeat)
             }
-            Row(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.Center) {
+            FlowRow(Modifier.fillMaxWidth().padding(top = 12.dp), horizontalArrangement = Arrangement.Center) {
                 TextButton(onClick = vm::stop, enabled = state.id != null) { Icon(Icons.Outlined.Stop, null, Modifier.size(18.dp)); Spacer(Modifier.width(4.dp)); Text("Stop") }
                 if (track != null) TextButton(onClick = { vm.favorite(track) }) {
                     Icon(if (favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(4.dp)); Text(if (favorite) "Saved" else "Favorite")
                 }
             }
+            if(track?.id?.startsWith("youtube:")==true || mixEnabled) MixToggle(vm, offline)
             if (compact) Spacer(Modifier.height(16.dp)) else Spacer(Modifier.weight(.5f))
         }
     }
@@ -497,4 +505,24 @@ private fun AddLinkDialog(dismiss: () -> Unit, add: (String, String, Boolean) ->
         }
     }, confirmButton = { TextButton(onClick = { add(title, url, allowed) }, enabled = title.isNotBlank() && url.startsWith("https://")) { Text("Add track") } },
         dismissButton = { TextButton(onClick = dismiss) { Text("Cancel") } })
+}
+
+@Composable
+private fun MixToggle(vm: MusicViewModel, offline: Boolean) {
+    val enabled by vm.mixEnabled.collectAsStateWithLifecycle()
+    val status by vm.mixStatus.collectAsStateWithLifecycle()
+    FilterChip(selected=enabled,onClick={ vm.mix(!enabled) },enabled=!offline || enabled,
+        label={ Text(if(enabled) "Mix on" else "Mix off") },
+        leadingIcon={ if(status.loading) CircularProgressIndicator(Modifier.size(14.dp),strokeWidth=2.dp) else Icon(Icons.AutoMirrored.Outlined.QueueMusic,null,Modifier.size(16.dp)) })
+}
+
+@Composable
+private fun MixStatusLine(vm: MusicViewModel) {
+    val enabled by vm.mixEnabled.collectAsStateWithLifecycle()
+    val status by vm.mixStatus.collectAsStateWithLifecycle()
+    if(enabled) {
+        Text(if(status.loading) "Finding Mix songs…" else status.message ?: status.source?.let { "Mix · $it" } ?: "Manual songs play first.",
+            style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+        if(status.retryable) TextButton(onClick=vm::retryMix) { Text("Retry Mix") }
+    }
 }

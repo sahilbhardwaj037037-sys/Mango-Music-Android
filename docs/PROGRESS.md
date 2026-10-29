@@ -1,6 +1,6 @@
 # Mango Music Android V1
 
-Current implementation: [experimental on-device online audio](ONLINE_AUDIO.md), approved after the research phase. Earlier milestone entries below are historical.
+Current implementation: [experimental on-device online audio](ONLINE_AUDIO.md) and optional [Mix / continuous autoplay](MIX_AUTOPLAY.md). Earlier milestone entries below are historical.
 
 Updated 29 October 2026. Reference `/Users/sahilbhardwaj/Developer/MangoMusic` inspected read-only. No macOS source, Git state, application, library data or release artifacts changed.
 
@@ -31,7 +31,7 @@ Updated 29 October 2026. Reference `/Users/sahilbhardwaj/Developer/MangoMusic` i
 - Experimental public YouTube search and native audio resolution are implemented; no account/sign-in integration, YouTube downloading, Apple Music or Spotify catalog. Provider changes can break extraction.
 - Distribution and commercial use need separate provider/licensing review. See ONLINE_AUDIO.md for runtime versions, maintenance and test limits.
 - No DRM/access-restriction bypass, mpv dependency, invented credentials, external backend or paid API. The Android on-device runtime is isolated from the desktop implementation.
-- No smart related-track autoplay, custom playlists, queue restoration after process death, history retention options or download deletion/cancellation UI.
+- No custom playlists, queue restoration after process death, history retention options or download deletion/cancellation UI. Related-song Mix is now implemented; recommendation relevance and extended sessions need further manual review.
 - Physical devices, Bluetooth routing, real headset unplugging, OEM battery restrictions, release signing and store distribution remain untested.
 - This is a debug build for testing. App data is excluded from backup; uninstall removes the library and imports.
 
@@ -62,3 +62,15 @@ Final result: normal APK built, installed in place and launched on existing Mang
 ## Stable local Git checkpoint — 29 October 2026
 
 Prepared `android-online-audio-working-v1` on local `main`; the workspace initially had no Git repository and the supplied GitHub repository had no refs. Source/APK backup was created before Git setup. All 16 Android checks passed together in a fresh full run; six unit tests passed freshly, the normal build passed, and lint has zero errors. Rebuilt APK matches the preserved working APK byte-for-byte. No implementation files changed. Ignore rules protect generated output, local configuration and credentials. See [checkpoint scope and recovery location](CHECKPOINT.md). No push was performed.
+
+## First-pass audio crackling investigation — 29 October 2026
+
+**Unresolved; not confirmed fixed.** User confirmed playback/controls functional but intermittent crackling remained after normal app restoration. Added bounded debug player/format/decoder/network/actual AudioTrack-underrun diagnostics and an opt-in non-mutating PCM comparison probe. Two permitted songs completed full first and natural Repeat One passes twice without seeking. No starvation, underruns, clipping-threshold samples or playback errors were observed; small PCM differences do not establish their connection to the audible issue. Corrected the long comparison harness to use normal ActivityScenario timing; stopped the test process and restored interactive normal Mango Music. No speculative bitrate, gain, buffer or decoder changes were applied.
+
+Six fresh unit tests, 18 regular Android checks, the separate full-pass comparisons and lint/build passed (zero lint errors). Diagnostic APK installed/launched on Mango36; user library/preferences, original recovery tag and backup hashes preserved. No commit/push or macOS modifications. Actual listening synchronized with the new diagnostics and physical-device comparison remain necessary. [Investigation, measurements and exact APK](AUDIO_CRACKLE_INVESTIGATION.md).
+
+## Mix / continuous autoplay — 29 October 2026
+
+Implemented optional, persisted Mix controls in Online search, Up Next and Now Playing. Service-owned bounded discovery prefers actual YouTube radio metadata, with public artist/title music-search fallback. Batch refill, duplicate/recent-song filtering (including obvious alternate uploader credits), manual priority under Shuffle, cancellation, unavailable auto-track recovery, retry/backoff and late-result continuation are implemented. Repeat One/All suspend discovery; Offline Mode blocks it. Original player/resolver, local library/downloads, Room schema, branding and vinyl are preserved.
+
+Sixteen unit tests and 27 distinct Android checks passed across the full regression and final targeted runs; lint has zero errors. Actual radio and fallback results plus recommended-song native background playback after a manual track were verified on Mango36. Updated debug APK installed/launched, checksum verified, existing library/preferences and recovery tag/backups preserved. No commit/push or macOS modifications. Crackling investigation remains paused with findings retained for physical-device testing. [Behavior, screenshots, measurements and APK](MIX_AUTOPLAY.md).

@@ -14,17 +14,23 @@ import kotlinx.coroutines.*
 
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 class PlaybackService: MediaSessionService() {
+    private var mix: MixQueueController? = null
     private var session: MediaSession? = null
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var recordedId: String? = null
     override fun onCreate() {
         super.onCreate()
         val online = (application as MangoApp).online
+        val diagnostics = (application as MangoApp).audioDiagnostics
         var retryId: String? = null
         var retries = 0
-        val player = ExoPlayer.Builder(this).setMediaSourceFactory(MangoMediaSourceFactory(this, online)).setAudioAttributes(
+        val player = ExoPlayer.Builder(this, diagnostics.renderers(this)).setMediaSourceFactory(MangoMediaSourceFactory(this, online)).setAudioAttributes(
             AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).build(), true)
             .setHandleAudioBecomingNoisy(true).build()
+        if (diagnostics.enabled) {
+            player.addAnalyticsListener(diagnostics.listener(player))
+            scope.launch { while (isActive) { diagnostics.sample(player); delay(5000) } }
+        }
         player.setWakeMode(C.WAKE_MODE_LOCAL)
         val prefs = getSharedPreferences("appearance", MODE_PRIVATE)
         player.repeatMode = prefs.getInt("repeat", Player.REPEAT_MODE_OFF)
@@ -55,6 +61,7 @@ class PlaybackService: MediaSessionService() {
             override fun onRepeatModeChanged(repeatMode: Int) { prefs.edit().putInt("repeat", repeatMode).apply() }
             override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) { prefs.edit().putBoolean("shuffle", shuffleModeEnabled).apply() }
         })
+        mix = MixQueueController(player,(application as MangoApp).repository,online,online.offline,(application as MangoApp).mix,scope)
         val activity = PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
         session = MediaSession.Builder(this, player).setSessionActivity(activity).build()
     }
@@ -65,5 +72,5 @@ class PlaybackService: MediaSessionService() {
     override fun onTaskRemoved(rootIntent: Intent?) {
         if (session?.player?.playWhenReady != true) stopSelf()
     }
-    override fun onDestroy() { session?.run { player.release(); release() }; session = null; scope.cancel(); super.onDestroy() }
+    override fun onDestroy() { mix?.release();mix=null; (application as MangoApp).audioDiagnostics.release(); session?.run { player.release(); release() }; session = null; scope.cancel(); super.onDestroy() }
 }

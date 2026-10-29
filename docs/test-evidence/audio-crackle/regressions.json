@@ -1,0 +1,124 @@
+{
+  "reportedTests": "19",
+  "failures": "0",
+  "errors": "0",
+  "passedCases": 18,
+  "skippedCases": 1,
+  "cases": [
+    {
+      "class": "com.mangomusic.AudioRepeatDiagnosticsTest",
+      "name": "compareFreshAndNaturalRepeatForTwoSongs",
+      "passed": false,
+      "skipped": true
+    },
+    {
+      "class": "com.mangomusic.LibraryTest",
+      "name": "originalAudioImportCopiesAndReadsMetadata",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.LibraryTest",
+      "name": "favoritesAndHistorySurviveDatabaseReopen",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.MigrationTest",
+      "name": "versionOneLibraryAndDownloadArePreserved",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.NavigationTest",
+      "name": "drawerBackNavigationStateAndRecreationPreservePlayback",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.NavigationTest",
+      "name": "navigationSearchFavoriteAndNowPlaying",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.OnlinePlaybackTest",
+      "name": "actualYouTubeAudioPlaysThroughNativeService",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.OnlinePlaybackTest",
+      "name": "runtimeAndRealSearch",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.OnlinePlaybackTest",
+      "name": "offlineBlocksSearchAndResolutionWithoutRequests",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.OnlinePlaybackTest",
+      "name": "onlineMusicQueueTransitionsAndCacheWork",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.OnlineSearchUiTest",
+      "name": "realResultsSelectNativePlayerAndNewSearchDoesNotInterrupt",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.PcmProbeTest",
+      "name": "fingerprintsPartialWritesWithoutChangingAudio",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.PcmProbeTest",
+      "name": "distinguishesTinyRoundingFromLargeSampleDifferences",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.PlaybackTest",
+      "name": "transientAudioFocusLossPausesAndResumes",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.PlaybackTest",
+      "name": "authorizedDownloadThenLocalPlayback",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.PlaybackTest",
+      "name": "assetPlaybackPauseSeekBackgroundAndModes",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.PlaybackTest",
+      "name": "directHttpsAudioActuallyPlays",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.PlaybackTest",
+      "name": "unavailableSourceReportsFailure",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.VinylAlignmentTest",
+      "name": "logoSharesDiscCenterAcrossRotationPauseResumeAndResize",
+      "passed": true,
+      "skipped": false
+    }
+  ],
+  "longComparison": "Passed separately twice with the opt-in argument; skipped intentionally in the regular regression run"
+}

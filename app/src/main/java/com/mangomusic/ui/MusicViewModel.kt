@@ -19,6 +19,11 @@ import kotlinx.coroutines.flow.*
 class MusicViewModel(application: Application): AndroidViewModel(application) {
     private val repository = (application as MangoApp).repository
     private val online = (application as MangoApp).online
+    private val mixSettings=(application as MangoApp).mix
+    val mixEnabled=mixSettings.enabled
+    val mixStatus=mixSettings.status
+    fun mix(value: Boolean) { mixSettings.enable(value) }
+    fun retryMix() { mixSettings.retry() }
     val onlineSearch = MutableStateFlow(com.mangomusic.online.OnlineSearchState())
     private var searchJob: Job? = null
     val saved = repository.tracks.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
@@ -55,7 +60,7 @@ class MusicViewModel(application: Application): AndroidViewModel(application) {
         val p = player ?: return
         playback.value = PlaybackState(p.currentMediaItem?.mediaId, p.isPlaying, p.playbackState == Player.STATE_BUFFERING,
             p.currentPosition.coerceAtLeast(0), p.duration.coerceAtLeast(0), p.repeatMode, p.shuffleModeEnabled,
-            (0 until p.mediaItemCount).map { p.getMediaItemAt(it).mediaId }, p.currentMediaItemIndex, true, p.playerError != null)
+            (0 until p.mediaItemCount).map { p.getMediaItemAt(it).mediaId }, p.currentMediaItemIndex, true, p.playerError != null, (0 until p.mediaItemCount).filter { com.mangomusic.playback.MixQueue.automatic(p.getMediaItemAt(it)) }.toSet())
     }
     private fun launch(action: suspend () -> Unit) { viewModelScope.launch { try { action() } catch (e: Exception) { error.value = e.localizedMessage ?: "Something went wrong. Please retry." } } }
     fun appearance(value: String) { theme.value = value; prefs.edit().putString("theme", value).apply() }
@@ -86,10 +91,10 @@ class MusicViewModel(application: Application): AndroidViewModel(application) {
             }
         }
     }
-    private fun media(track: Track): MediaItem {
+    private fun media(track: Track, next: Boolean=false): MediaItem {
         val local = saved.value.find { it.id == track.id }?.localUri
         return MediaItem.Builder().setMediaId(track.id).setUri(local ?: track.uri)
-            .setMediaMetadata(MediaMetadata.Builder().setTitle(track.title).setArtist(track.artist).setArtworkUri(track.thumbnailUrl?.let(Uri::parse)).build()).build()
+            .setMediaMetadata(MediaMetadata.Builder().setTitle(track.title).setArtist(track.artist).setArtworkUri(track.thumbnailUrl?.let(Uri::parse)).setExtras(android.os.Bundle().apply { putString(com.mangomusic.playback.MixQueue.ENTRY,java.util.UUID.randomUUID().toString());if(next)putLong(com.mangomusic.playback.MixQueue.NEXT,System.nanoTime()) }).build()).build()
     }
     fun play(track: Track, list: List<Track> = listOf(track)) {
         val p = player ?: return
@@ -98,14 +103,16 @@ class MusicViewModel(application: Application): AndroidViewModel(application) {
         error.value = null
         launch {
             sequence.forEach { repository.add(it) }
-            p.setMediaItems(sequence.map(::media), sequence.indexOfFirst { it.id == track.id }.coerceAtLeast(0), 0)
+            p.setMediaItems(sequence.map { media(it) }, sequence.indexOfFirst { it.id == track.id }.coerceAtLeast(0), 0)
             p.prepare(); p.play()
         }
     }
     fun enqueue(track: Track, next: Boolean = false) {
         val p = player ?: return
         if (!available(track)) { error.value = "This song is not saved offline."; return }
-        launch { repository.add(track); p.addMediaItem(if (next) (p.currentMediaItemIndex + 1).coerceAtLeast(0) else p.mediaItemCount, media(track)) }
+        launch { repository.add(track); val insertion=if(next) (p.currentMediaItemIndex+1).coerceAtLeast(0) else
+            ((p.currentMediaItemIndex+1 until p.mediaItemCount).firstOrNull { com.mangomusic.playback.MixQueue.automatic(p.getMediaItemAt(it)) } ?: p.mediaItemCount)
+            p.addMediaItem(insertion,media(track,next)) }
     }
     fun toggle() { player?.let { if (it.isPlaying || it.playWhenReady && it.playbackState == Player.STATE_BUFFERING) it.pause() else { if (it.playbackState == Player.STATE_ENDED) it.seekToDefaultPosition(); if (it.playbackState == Player.STATE_IDLE) it.prepare(); it.play() } } }
     fun retry() { error.value = null; player?.prepare(); player?.play() }
@@ -131,4 +138,4 @@ class MusicViewModel(application: Application): AndroidViewModel(application) {
 
 data class PlaybackState(val id: String? = null, val playing: Boolean = false, val buffering: Boolean = false,
     val position: Long = 0, val duration: Long = 0, val repeat: Int = 0, val shuffle: Boolean = false,
-    val queue: List<String> = emptyList(), val index: Int = -1, val connected: Boolean = false, val failed: Boolean = false)
+    val queue: List<String> = emptyList(), val index: Int = -1, val connected: Boolean = false, val failed: Boolean = false, val automaticEntries: Set<Int> = emptySet())

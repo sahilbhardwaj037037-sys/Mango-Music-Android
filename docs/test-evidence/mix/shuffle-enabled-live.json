@@ -1,0 +1,12 @@
+{
+  "tests": 1,
+  "failures": 0,
+  "shuffleEnabledBeforeSeed": true,
+  "cases": [
+    {
+      "class": "com.mangomusic.MixPlaybackTest",
+      "name": "actualRadioExpandsQueueAndPlaysAfterManualSongInBackground",
+      "passed": true
+    }
+  ]
+}

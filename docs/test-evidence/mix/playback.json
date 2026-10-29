@@ -1,0 +1,9 @@
+{
+  "seed": "youtube:6hBDh3dRvLc",
+  "autoTrack": "youtube:IpFX2vq8HKw",
+  "radioOrSearchSource": "YouTube radio",
+  "realQueueExpansion": true,
+  "manualPriorityWithShuffle": true,
+  "automaticBackgroundPlayback": true,
+  "mixOffKeepsCurrentPlaying": true
+}

@@ -1,0 +1,41 @@
+{
+  "build": "passed",
+  "unitSuites": [
+    {
+      "suite": "com.mangomusic.DomainTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "suite": "com.mangomusic.ShuffleOrderTest",
+      "tests": 2,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "suite": "com.mangomusic.MixPolicyTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0
+    }
+  ],
+  "unitTests": 16,
+  "lint": {
+    "app": {
+      "errors": 0,
+      "warnings": 29
+    },
+    "online-runtime": {
+      "errors": 0,
+      "warnings": 1
+    }
+  },
+  "apk": "/Users/sahilbhardwaj/Developer/MangoMusic-Android/app/build/outputs/apk/debug/app-debug.apk",
+  "bytes": 44196543,
+  "sha256": "251f8de97c36eb30388196c59d43707bf58555fa14a755a86390e5d8b44e6a5e",
+  "architecture": "arm64-v8a",
+  "cracklingInvestigation": "Paused; no quality fix claimed",
+  "installedApkChecksumMatches": true,
+  "installedAndLaunchedOn": "Mango36 / emulator-5556 / Android 16"
+}

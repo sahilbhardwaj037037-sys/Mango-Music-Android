@@ -1,0 +1,163 @@
+{
+  "distinctPassed": 27,
+  "skipped": 1,
+  "scope": "Full regression plus focused final Mix/UI reruns after fixes. The long crackling comparison remains paused/skipped.",
+  "cases": [
+    {
+      "class": "com.mangomusic.AudioRepeatDiagnosticsTest",
+      "name": "compareFreshAndNaturalRepeatForTwoSongs",
+      "passed": false,
+      "skipped": true
+    },
+    {
+      "class": "com.mangomusic.LibraryTest",
+      "name": "originalAudioImportCopiesAndReadsMetadata",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.LibraryTest",
+      "name": "favoritesAndHistorySurviveDatabaseReopen",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.MigrationTest",
+      "name": "versionOneLibraryAndDownloadArePreserved",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.MixPlaybackTest",
+      "name": "actualRadioExpandsQueueAndPlaysAfterManualSongInBackground",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.MixTest",
+      "name": "manualPriorityShuffleCancellationRepeatAndOffline",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.MixTest",
+      "name": "failedAndEmptyRecommendationsLeavePlaybackAlone",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.MixTest",
+      "name": "realProviderRecommendationsAndOfflineGuard",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.MixTest",
+      "name": "disabledDuringFetchCannotAppendStaleResults",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.MixTest",
+      "name": "unavailableAutomaticSongSkipsToManualSong",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.MixUiTest",
+      "name": "mixToggleSurvivesNavigationRecreationAndRespectsOffline",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.NavigationTest",
+      "name": "drawerBackNavigationStateAndRecreationPreservePlayback",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.NavigationTest",
+      "name": "navigationSearchFavoriteAndNowPlaying",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.OnlinePlaybackTest",
+      "name": "actualYouTubeAudioPlaysThroughNativeService",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.OnlinePlaybackTest",
+      "name": "runtimeAndRealSearch",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.OnlinePlaybackTest",
+      "name": "offlineBlocksSearchAndResolutionWithoutRequests",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.OnlinePlaybackTest",
+      "name": "onlineMusicQueueTransitionsAndCacheWork",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.OnlineSearchUiTest",
+      "name": "realResultsSelectNativePlayerAndNewSearchDoesNotInterrupt",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.PcmProbeTest",
+      "name": "fingerprintsPartialWritesWithoutChangingAudio",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.PcmProbeTest",
+      "name": "distinguishesTinyRoundingFromLargeSampleDifferences",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.PlaybackTest",
+      "name": "transientAudioFocusLossPausesAndResumes",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.PlaybackTest",
+      "name": "authorizedDownloadThenLocalPlayback",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.PlaybackTest",
+      "name": "assetPlaybackPauseSeekBackgroundAndModes",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.PlaybackTest",
+      "name": "directHttpsAudioActuallyPlays",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.PlaybackTest",
+      "name": "unavailableSourceReportsFailure",
+      "passed": true,
+      "skipped": false
+    },
+    {
+      "class": "com.mangomusic.VinylAlignmentTest",
+      "name": "logoSharesDiscCenterAcrossRotationPauseResumeAndResize",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.MixTest",
+      "name": "unavailableRadioFallsBackToRealMusicSearch",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.MixTest",
+      "name": "lateRecommendationsResumeEndedQueueAtFirstNewSong",
+      "passed": true
+    }
+  ]
+}

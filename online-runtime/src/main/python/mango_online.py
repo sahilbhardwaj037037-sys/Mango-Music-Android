@@ -73,6 +73,22 @@ def execute(operation, value, qjs, cancelled, temp_root):
                 if item and item['id'] not in seen:
                     entries.append(item);seen.add(item['id'])
             result={'tracks': entries}
+        elif operation == 'mix':
+            if not re.fullmatch(r'[A-Za-z0-9_-]{11}', value): raise ValueError()
+            opts.update({'noplaylist': False, 'extract_flat': 'in_playlist',
+                         'playlistend': 20, 'lazy_playlist': True})
+            with GuardedYoutubeDL(opts) as ydl:
+                data = ydl.extract_info('https://www.youtube.com/watch?v=' + value + '&list=RD' + value, download=False)
+                entries=[]; seen=set()
+                for entry in data.get('entries') or []:
+                    if cancelled.get(): raise Cancelled()
+                    if entry.get('availability') in ('private','premium_only','subscriber_only','needs_auth'): continue
+                    if entry.get('live_status') in ('is_live','is_upcoming'): continue
+                    item=track(entry)
+                    if item and item['id'] not in seen:
+                        entries.append(item);seen.add(item['id'])
+                    if len(entries)>=20: break
+            result={'tracks': entries, 'source': 'radio'}
         elif operation == 'resolve':
             if not re.fullmatch(r'[A-Za-z0-9_-]{11}', value): raise ValueError()
             opts['format'] = 'bestaudio[protocol^=m3u8]/bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio'

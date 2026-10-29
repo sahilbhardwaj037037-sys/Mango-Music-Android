@@ -1,0 +1,22 @@
+{
+  "apk": "/Users/sahilbhardwaj/Developer/MangoMusic-Android/app/build/outputs/apk/debug/app-debug.apk",
+  "bytes": 44160771,
+  "sha256": "ea282dc8ff044925243c99cdbf50a446580e191e1af00b81181e14d674dfcfd7",
+  "installedAndLaunchedOn": "Mango36 / emulator-5556 / Android 16 / API 36 / ARM64",
+  "unitTests": 6,
+  "unitFailures": 0,
+  "lint": {
+    "app": {
+      "errors": 0,
+      "warnings": 28
+    },
+    "online-runtime": {
+      "errors": 0,
+      "warnings": 1
+    }
+  },
+  "purpose": "Instrumented diagnostic build; crackling is NOT confirmed fixed",
+  "playbackSettingsChanged": false,
+  "noCommitOrPush": true,
+  "installedApkChecksumMatches": true
+}

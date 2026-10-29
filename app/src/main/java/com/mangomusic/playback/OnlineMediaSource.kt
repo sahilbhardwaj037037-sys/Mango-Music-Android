@@ -38,7 +38,9 @@ private class OnlineMediaSource(private val context: Context, private val online
         failure=null
         job=CoroutineScope(SupervisorJob()+Dispatchers.IO).launch {
             try {
+                val started=android.os.SystemClock.elapsedRealtime()
                 val audio=online.resolve(original.mediaId)
+                (context.applicationContext as com.mangomusic.MangoApp).audioDiagnostics.record("sourceResolved","durationMs" to (android.os.SystemClock.elapsedRealtime()-started),"transport" to if (audio.mimeType=="application/x-mpegURL") "hls" else "progressive")
                 ensureActive()
                 handler.post {
                     if (generation==token) {

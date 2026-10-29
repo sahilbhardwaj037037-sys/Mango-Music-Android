@@ -1,0 +1,11 @@
+{
+  "tests": 1,
+  "failures": 0,
+  "cases": [
+    {
+      "class": "com.mangomusic.MixTest",
+      "name": "manualPriorityShuffleCancellationRepeatAndOffline",
+      "passed": true
+    }
+  ]
+}

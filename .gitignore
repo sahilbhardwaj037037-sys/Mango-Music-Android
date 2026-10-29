@@ -33,3 +33,6 @@ google-services.json
 
 # Curated validation logs referenced by project documentation
 !docs/test-evidence/**/*.log
+
+# Detailed local audio investigation traces; summary/findings are retained
+/docs/test-evidence/audio-crackle/comparison-events.json

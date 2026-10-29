@@ -1,0 +1,51 @@
+{
+  "tests": 9,
+  "failures": 0,
+  "cases": [
+    {
+      "class": "com.mangomusic.MixTest",
+      "name": "manualPriorityShuffleCancellationRepeatAndOffline",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.MixTest",
+      "name": "failedAndEmptyRecommendationsLeavePlaybackAlone",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.MixTest",
+      "name": "lateRecommendationsResumeEndedQueueAtFirstNewSong",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.MixTest",
+      "name": "unavailableRadioFallsBackToRealMusicSearch",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.MixTest",
+      "name": "realProviderRecommendationsAndOfflineGuard",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.MixTest",
+      "name": "disabledDuringFetchCannotAppendStaleResults",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.MixTest",
+      "name": "unavailableAutomaticSongSkipsToManualSong",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.MixPlaybackTest",
+      "name": "actualRadioExpandsQueueAndPlaysAfterManualSongInBackground",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.MixUiTest",
+      "name": "mixToggleSurvivesNavigationRecreationAndRespectsOffline",
+      "passed": true
+    }
+  ]
+}

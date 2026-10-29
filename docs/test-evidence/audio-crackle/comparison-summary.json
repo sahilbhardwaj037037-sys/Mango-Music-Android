@@ -1,0 +1,45 @@
+{
+  "cracklingConfirmedFixed": false,
+  "rootCauseEstablished": false,
+  "manualFeedback": {
+    "playbackFunctional": true,
+    "controlsFunctional": true,
+    "audioQuality": "NOT OK \u2014 user reports intermittent crackling remains after normal app restoration"
+  },
+  "naturalRepeat": true,
+  "seekUsed": false,
+  "audibleQualityVerifiedByAutomation": false,
+  "decoder": "c2.android.aac.decoder",
+  "sourceFormat": "HLS / AAC-LC / 44100 Hz / stereo",
+  "pcmOutput": "16-bit / 64192-byte AudioTrack buffer",
+  "songs": [
+    {
+      "id": "youtube:6hBDh3dRvLc",
+      "title": "Fluffing a Duck",
+      "startupMs": 10236,
+      "catalogDurationMs": 68000,
+      "completeNaturalPasses": 2,
+      "comparedSamples": 5935104,
+      "differentSamples": 26087,
+      "maximumAbsoluteSampleDelta": 112,
+      "nearFullScaleSamples": 0,
+      "maxSampledAudioTrackUnderruns": 0,
+      "minimumSampledBufferedMs": 50076,
+      "errors": []
+    },
+    {
+      "id": "youtube:RzMQ7Cmpzi4",
+      "title": "Sneaky Adventure",
+      "startupMs": 14539,
+      "catalogDurationMs": 74000,
+      "completeNaturalPasses": 2,
+      "comparedSamples": 6473728,
+      "differentSamples": 18780,
+      "maximumAbsoluteSampleDelta": 4,
+      "nearFullScaleSamples": 0,
+      "maxSampledAudioTrackUnderruns": 0,
+      "minimumSampledBufferedMs": 25260,
+      "errors": []
+    }
+  ]
+}

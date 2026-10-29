@@ -1,0 +1,31 @@
+{
+  "tests": 5,
+  "failures": 0,
+  "cases": [
+    {
+      "class": "com.mangomusic.MixPlaybackTest",
+      "name": "actualRadioExpandsQueueAndPlaysAfterManualSongInBackground",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.MixUiTest",
+      "name": "mixToggleSurvivesNavigationRecreationAndRespectsOffline",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.NavigationTest",
+      "name": "drawerBackNavigationStateAndRecreationPreservePlayback",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.NavigationTest",
+      "name": "navigationSearchFavoriteAndNowPlaying",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.VinylAlignmentTest",
+      "name": "logoSharesDiscCenterAcrossRotationPauseResumeAndResize",
+      "passed": true
+    }
+  ]
+}
