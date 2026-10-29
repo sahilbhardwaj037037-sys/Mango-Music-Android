@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.*
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 class MusicViewModel(application: Application): AndroidViewModel(application) {
     private val repository = (application as MangoApp).repository
+    private val downloads = (application as MangoApp).downloads
+    val downloadConsent=MutableStateFlow<Track?>(null)
     private val online = (application as MangoApp).online
     private val mixSettings=(application as MangoApp).mix
     val mixEnabled=mixSettings.enabled
@@ -54,7 +56,7 @@ class MusicViewModel(application: Application): AndroidViewModel(application) {
             catch (e: Exception) { error.value = "Could not connect to playback. Reopen Mango Music." }
         }, androidx.core.content.ContextCompat.getMainExecutor(application))
         viewModelScope.launch { while (isActive) { refresh(); delay(500) } }
-        viewModelScope.launch { while (isActive) { try { repository.refreshDownloads(saved.value) } catch (e: Exception) { error.value = "Could not check downloads: ${e.localizedMessage}" }; delay(2000) } }
+        viewModelScope.launch { while (isActive) { try { repository.refreshDownloads(saved.value); downloads.reconcile(saved.value) } catch (e: Exception) { error.value = "Could not check downloads: ${e.localizedMessage}" }; delay(2000) } }
     }
     private fun refresh() {
         val p = player ?: return
@@ -67,10 +69,10 @@ class MusicViewModel(application: Application): AndroidViewModel(application) {
     fun offline(value: Boolean) {
         player?.stop(); player?.clearMediaItems(); offline.value = value
         online.setOffline(value)
-        if (value) { searchJob?.cancel(); onlineSearch.value = com.mangomusic.online.OnlineSearchState() }
+        if (value) { launch { downloads.pauseAll() }; searchJob?.cancel(); onlineSearch.value = com.mangomusic.online.OnlineSearchState() }
         prefs.edit().putBoolean("offline", value).apply()
     }
-    fun available(track: Track): Boolean = !offline.value || track.uri.startsWith("asset:") || track.uri.startsWith("file:") || saved.value.any { it.id == track.id && it.localUri != null }
+    fun available(track: Track): Boolean = !offline.value || track.uri.startsWith("asset:") || track.uri.startsWith("file:") || saved.value.any { it.id == track.id && downloads.local(it) != null }
     fun searchOnline(query: String, enabled: Boolean) {
         searchJob?.cancel()
         val term = query.trim()
@@ -92,7 +94,7 @@ class MusicViewModel(application: Application): AndroidViewModel(application) {
         }
     }
     private fun media(track: Track, next: Boolean=false): MediaItem {
-        val local = saved.value.find { it.id == track.id }?.localUri
+        val local = downloads.local(saved.value.find { it.id == track.id })
         return MediaItem.Builder().setMediaId(track.id).setUri(local ?: track.uri)
             .setMediaMetadata(MediaMetadata.Builder().setTitle(track.title).setArtist(track.artist).setArtworkUri(track.thumbnailUrl?.let(Uri::parse)).setExtras(android.os.Bundle().apply { putString(com.mangomusic.playback.MixQueue.ENTRY,java.util.UUID.randomUUID().toString());if(next)putLong(com.mangomusic.playback.MixQueue.NEXT,System.nanoTime()) }).build()).build()
     }
@@ -128,11 +130,13 @@ class MusicViewModel(application: Application): AndroidViewModel(application) {
     fun clearHistory() = launch { repository.dao.clearHistory() }
     fun import(uri: Uri) = launch { busy.value = true; try { repository.import(uri) } finally { busy.value = false } }
     fun addStream(title: String, url: String, downloadable: Boolean) = launch { repository.addStream(title, url, downloadable) }
-    fun download(track: Track) = launch {
-        require(!offline.value) { "Turn off Offline Mode to download." }
-        if (saved.value.any { it.id == track.id && (it.downloadId > 0 || it.localUri != null) }) return@launch
-        repository.download(track)
+    fun download(track:Track) {
+        if(offline.value) { error.value="Turn off Offline Mode to download.";return }
+        downloadConsent.value=track
     }
+    fun confirmDownload() { val track=downloadConsent.value ?: return;downloadConsent.value=null;launch { downloads.enqueue(track,true) } }
+    fun cancelDownload(track:Track)=launch { downloads.cancel(track.id) }
+    fun deleteDownload(track:Track)=launch { downloads.remove(track.id) }
     override fun onCleared() { player?.removeListener(listener); MediaController.releaseFuture(future); super.onCleared() }
 }
 

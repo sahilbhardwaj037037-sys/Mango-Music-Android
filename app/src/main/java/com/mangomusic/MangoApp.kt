@@ -4,6 +4,7 @@ import android.app.Application
 import com.mangomusic.data.LibraryRepository
 
 class MangoApp: Application() {
+    val downloads by lazy { com.mangomusic.downloads.AudioDownloads(this) }
     val repository by lazy { LibraryRepository(this) }
     val audioDiagnostics by lazy { com.mangomusic.playback.AudioPlaybackDiagnostics(this) }
     val mix by lazy { com.mangomusic.playback.MixSettings(this) }

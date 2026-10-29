@@ -17,8 +17,14 @@ import java.util.UUID
 data class SavedTrack(@PrimaryKey val id: String, val title: String, val artist: String, val uri: String,
     val durationMs: Long = 0, val downloadable: Boolean = false, val favorite: Boolean = false,
     val lastPlayed: Long = 0, val playCount: Int = 0, val localUri: String? = null, val downloadId: Long = 0,
-    val downloadError: String? = null, val thumbnailUrl: String? = null) {
-    fun track() = Track(id, title, artist, uri, durationMs, downloadable, thumbnailUrl)
+    val downloadError: String? = null, val thumbnailUrl: String? = null,
+    @ColumnInfo(defaultValue="'NONE'") val downloadState: String="NONE",
+    @ColumnInfo(defaultValue="0") val downloadedBytes: Long=0,
+    @ColumnInfo(defaultValue="0") val totalBytes: Long=0,
+    val downloadWork: String?=null, val downloadAttempt: String?=null,
+    val localArtworkUri: String?=null, val fileSha256: String?=null,
+    @ColumnInfo(defaultValue="0") val downloadPermission: Boolean=false) {
+    fun track() = Track(id, title, artist, uri, durationMs, downloadable, localArtworkUri ?: thumbnailUrl)
 }
 @Dao
 interface LibraryDao {
@@ -31,19 +37,45 @@ interface LibraryDao {
     @Query("UPDATE tracks SET lastPlayed=0, playCount=0") suspend fun clearHistory()
     @Query("UPDATE tracks SET downloadId=:job, downloadError=NULL WHERE id=:id") suspend fun downloading(id: String, job: Long)
     @Query("UPDATE tracks SET localUri=:uri, downloadId=0, downloadError=:error WHERE id=:id") suspend fun downloaded(id: String, uri: String?, error: String?)
+    @Query("UPDATE tracks SET downloadState='QUEUED',downloadWork=:work,downloadAttempt=NULL,downloadError=NULL,downloadedBytes=0,totalBytes=0,downloadPermission=1 WHERE id=:id")
+    suspend fun queueDownload(id:String,work:String)
+    @Query("UPDATE tracks SET downloadState='DOWNLOADING',downloadAttempt=:attempt,downloadError=NULL,downloadedBytes=0,totalBytes=0 WHERE id=:id AND downloadWork=:work AND downloadState!='COMPLETED'")
+    suspend fun claimDownload(id:String,work:String,attempt:String):Int
+    @Query("UPDATE tracks SET downloadState=:state,downloadedBytes=:bytes,totalBytes=:total WHERE id=:id AND downloadWork=:work AND downloadAttempt=:attempt")
+    suspend fun downloadProgress(id:String,work:String,attempt:String,state:String,bytes:Long,total:Long):Int
+    @Query("UPDATE tracks SET downloadState='COMPLETED',localUri=:uri,localArtworkUri=:art,durationMs=:duration,downloadedBytes=:bytes,totalBytes=:bytes,fileSha256=:sha,downloadError=NULL,downloadId=0 WHERE id=:id AND downloadWork=:work AND downloadAttempt=:attempt")
+    suspend fun completeDownload(id:String,work:String,attempt:String,uri:String,art:String?,duration:Long,bytes:Long,sha:String):Int
+    @Query("UPDATE tracks SET downloadState='FAILED',downloadError=:message WHERE id=:id AND downloadWork=:work AND downloadAttempt=:attempt")
+    suspend fun failDownload(id:String,work:String,attempt:String,message:String):Int
+    @Query("UPDATE tracks SET downloadState=:state,downloadWork=NULL,downloadAttempt=NULL,downloadError=:message WHERE id=:id")
+    suspend fun stopDownload(id:String,state:String,message:String?)
+    @Query("UPDATE tracks SET localUri=NULL,localArtworkUri=NULL,fileSha256=NULL,downloadWork=NULL,downloadAttempt=NULL,downloadedBytes=0,totalBytes=0,downloadState='NONE',downloadError=NULL,downloadId=0,downloadPermission=0 WHERE id=:id")
+    suspend fun clearDownload(id:String)
+
 }
-@Database(entities = [SavedTrack::class], version = 2, exportSchema = true)
+@Database(entities = [SavedTrack::class], version = 3, exportSchema = true)
 abstract class LibraryDatabase: RoomDatabase() {
     abstract fun library(): LibraryDao
     companion object {
         val MIGRATION_1_2 = object: androidx.room.migration.Migration(1,2) {
             override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) { db.execSQL("ALTER TABLE tracks ADD COLUMN thumbnailUrl TEXT") }
         }
+        val MIGRATION_2_3 = object: androidx.room.migration.Migration(2,3) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE tracks ADD COLUMN downloadState TEXT NOT NULL DEFAULT 'NONE'")
+                db.execSQL("ALTER TABLE tracks ADD COLUMN downloadedBytes INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE tracks ADD COLUMN totalBytes INTEGER NOT NULL DEFAULT 0")
+                listOf("downloadWork","downloadAttempt","localArtworkUri","fileSha256").forEach { db.execSQL("ALTER TABLE tracks ADD COLUMN $it TEXT") }
+                db.execSQL("ALTER TABLE tracks ADD COLUMN downloadPermission INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("UPDATE tracks SET downloadState='COMPLETED' WHERE localUri IS NOT NULL")
+            }
+        }
+
     }
 }
 
 class LibraryRepository(private val context: Context) {
-    val db = Room.databaseBuilder(context, LibraryDatabase::class.java, "mango.db").addMigrations(LibraryDatabase.MIGRATION_1_2).build()
+    val db = Room.databaseBuilder(context, LibraryDatabase::class.java, "mango.db").addMigrations(LibraryDatabase.MIGRATION_1_2,LibraryDatabase.MIGRATION_2_3).build()
     val dao = db.library()
     val tracks = dao.observe()
     suspend fun seed() { Catalog.samples.forEach { add(it) } }

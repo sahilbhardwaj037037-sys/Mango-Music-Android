@@ -100,7 +100,14 @@ fun MangoScreen(vm: MusicViewModel) {
         }
     }
 
+    val consent by vm.downloadConsent.collectAsStateWithLifecycle()
+    val notificationPermission=rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
     MaterialTheme(colorScheme = if (dark) MangoDarkColors else MangoLightColors) {
+        if(consent!=null) AlertDialog(onDismissRequest={ vm.downloadConsent.value=null },
+            title={ Text("Save audio offline?") },
+            text={ Text("Download only if the source and content owner permit saving this audio. Public availability alone is not permission. Mango Music cannot bypass DRM, sign-in, access controls or source restrictions.") },
+            confirmButton={ TextButton(onClick={ vm.confirmDownload();if(android.os.Build.VERSION.SDK_INT>=33)notificationPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS) }) { Text("Download") } },
+            dismissButton={ TextButton(onClick={ vm.downloadConsent.value=null }) { Text("Cancel") } })
         BackHandler(nowPlaying && !drawer.isOpen) { nowPlaying = false }
         BackHandler(drawer.isOpen) { scope.launch { drawer.close() } }
         ModalNavigationDrawer(
@@ -219,7 +226,7 @@ fun MangoScreen(vm: MusicViewModel) {
                 HorizontalDivider(Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outlineVariant)
                 Text("Mango Music · V1", style = MaterialTheme.typography.labelMedium)
                 Spacer(Modifier.height(6.dp))
-                Text("Online search streams permitted public audio. Online music is experimental; sign-in-restricted content and online downloads are unavailable.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Online search streams permitted public audio. Online music is experimental; restricted content cannot be played or saved. Download only with source and content-owner permission.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         if (addLink) AddLinkDialog({ addLink = false }) { title, url, allowed -> vm.addStream(title, url, allowed); addLink = false }
@@ -252,7 +259,7 @@ private fun LibraryScreen(
         "Search" -> if (onlineSelected && !offline) onlineState.tracks else Catalog.search(all.filter { !it.id.startsWith("youtube:") && vm.available(it) }, query)
         "Favorites" -> saved.filter { it.favorite }.map { it.track() }
         "History" -> saved.filter { it.lastPlayed > 0 }.sortedByDescending { it.lastPlayed }.map { it.track() }
-        "Downloads" -> saved.filter { it.localUri != null || it.uri.startsWith("file:") || it.uri.startsWith("asset:") || it.downloadId > 0 || it.downloadError != null }.map { it.track() }
+        "Downloads" -> saved.filter { it.localUri != null || it.uri.startsWith("file:") || it.uri.startsWith("asset:") || it.downloadId > 0 || it.downloadError != null || it.downloadState != "NONE" }.map { it.track() }
         else -> playback.queue.mapNotNull { id -> all.find { it.id == id } }
     }
     // Each destination owns its saved list position; the header scrolls with its content on small screens.
@@ -289,6 +296,10 @@ private fun LibraryScreen(
                 if (destination == "History" && visible.isNotEmpty()) TextButton(onClick = clearHistory) { Text("Clear") }
                 if (destination == "Favorites" && visible.isNotEmpty()) TextButton(onClick = { vm.play(visible.first(), visible) }) { Text("Play all") }
             }
+            if(destination=="Downloads") {
+                val used=saved.sumOf { it.downloadedBytes.takeIf { _ -> it.localUri!=null } ?: 0L }
+                Text("${used/(1024*1024)} MB saved · ${androidx.compose.ui.platform.LocalContext.current.filesDir.usableSpace/(1024*1024)} MB available",style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+            }
             if(destination=="Up Next") {
                 MixToggle(vm,offline)
                 MixStatusLine(vm)
@@ -315,7 +326,7 @@ private fun LibraryScreen(
             TrackRow(track, stored, playback.id == track.id, destination == "Up Next", destination == "History", playback.connected, offline,
                 onPlay = { if (destination == "Up Next") vm.queuePlay(index) else vm.play(track, if(destination=="Search" && onlineSelected && vm.mixEnabled.value) listOf(track) else visible) },
                 onFavorite = { vm.favorite(track) }, onQueue = { vm.enqueue(track) }, onNext = { vm.enqueue(track, true) },
-                onRemove = { vm.remove(index) }, onDownload = { vm.download(track) }, automatic = destination=="Up Next" && index in playback.automaticEntries)
+                onRemove = { vm.remove(index) }, onDownload = { vm.download(track) }, onCancel={ vm.cancelDownload(track) }, onDelete={ vm.deleteDownload(track) }, automatic = destination=="Up Next" && index in playback.automaticEntries)
             HorizontalDivider(Modifier.padding(start = 40.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .55f))
         }
     }
@@ -324,12 +335,14 @@ private fun LibraryScreen(
 @Composable
 private fun TrackRow(
     track: Track, saved: SavedTrack?, selected: Boolean, queued: Boolean, showHistory: Boolean, connected: Boolean, offline: Boolean,
-    onPlay: () -> Unit, onFavorite: () -> Unit, onQueue: () -> Unit, onNext: () -> Unit, onRemove: () -> Unit, onDownload: () -> Unit, automatic: Boolean=false
+    onPlay: () -> Unit, onFavorite: () -> Unit, onQueue: () -> Unit, onNext: () -> Unit, onRemove: () -> Unit, onDownload: () -> Unit, onCancel: () -> Unit, onDelete: () -> Unit, automatic: Boolean=false
 ) {
     var menu by remember { mutableStateOf(false) }
+    var delete by remember { mutableStateOf(false) }
+    if(delete) AlertDialog(onDismissRequest={ delete=false },title={ Text("Remove saved audio?") },text={ Text("This removes the downloaded copy of ${track.title}. Favorites and listening history are kept.") },confirmButton={ TextButton(onClick={ delete=false;onDelete() }) { Text("Remove download") } },dismissButton={ TextButton(onClick={ delete=false }) { Text("Cancel") } })
     Surface(shape = RoundedCornerShape(6.dp), color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = .06f) else Color.Transparent) {
         Row(Modifier.fillMaxWidth().heightIn(min = 68.dp).clickable(enabled = connected, onClick = onPlay).padding(start = 4.dp, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (!offline && track.thumbnailUrl != null) coil.compose.AsyncImage(model = track.thumbnailUrl, contentDescription = null,
+            if (track.thumbnailUrl != null && (!offline || track.thumbnailUrl.startsWith("file:"))) coil.compose.AsyncImage(model = track.thumbnailUrl, contentDescription = null,
                 modifier = Modifier.size(40.dp).clip(RoundedCornerShape(6.dp)).testTag("online-thumbnail"), contentScale = androidx.compose.ui.layout.ContentScale.Crop)
             else Icon(if (selected) Icons.Outlined.GraphicEq else Icons.Outlined.MusicNote, null, Modifier.size(22.dp), tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.width(12.dp))
@@ -338,7 +351,13 @@ private fun TrackRow(
                     color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
                 Spacer(Modifier.height(3.dp))
                 Text(track.artist, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (track.id.startsWith("youtube:")) Text(if (offline) "Online · not saved offline" else if(automatic) "Mix" else "Online", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (track.id.startsWith("youtube:")) Text(if (offline && saved?.localUri==null) "Online · not saved offline" else if(automatic) "Mix" else "Online", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if(saved?.downloadState in com.mangomusic.downloads.DownloadPolicy.active) {
+                    val percent=com.mangomusic.downloads.DownloadPolicy.percent(saved!!.downloadedBytes,saved.totalBytes)
+                    Text(if(saved.downloadState=="VERIFYING") "Verifying audio…" else "${saved.downloadState.lowercase().replaceFirstChar { it.uppercase() }} · ${percent?.let { "$it%" } ?: "${saved.downloadedBytes/1024} KB"}",style=MaterialTheme.typography.labelSmall)
+                    if(percent!=null) LinearProgressIndicator(progress={percent/100f},modifier=Modifier.fillMaxWidth())
+                }
+                if(saved?.downloadState in listOf("CANCELLED","PAUSED")) Text(saved!!.downloadState.lowercase().replaceFirstChar { it.uppercase() },style=MaterialTheme.typography.labelSmall)
                 if (saved != null && saved.downloadId != 0L) Text("Downloading…", style = MaterialTheme.typography.labelSmall)
                 if (saved?.downloadError != null) Text(saved.downloadError, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelSmall)
                 if (saved?.localUri != null || track.uri.startsWith("file:")) Text("Saved offline", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -354,7 +373,9 @@ private fun TrackRow(
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                     DropdownMenuItem(text = { Text("Play next") }, onClick = { onNext(); menu = false })
                     DropdownMenuItem(text = { Text("Add to Up Next") }, onClick = { onQueue(); menu = false })
-                    if (track.downloadable && saved?.localUri == null && saved?.downloadId == 0L) DropdownMenuItem(text = { Text("Download") }, onClick = { onDownload(); menu = false })
+                    if (!offline && com.mangomusic.downloads.DownloadPolicy.eligible(track) && saved?.localUri == null && (saved?.downloadId ?: 0L)==0L && saved?.downloadState !in com.mangomusic.downloads.DownloadPolicy.active) DropdownMenuItem(text = { Text(if(saved?.downloadState in listOf("FAILED","PAUSED","CANCELLED","MISSING")) "Retry download" else "Download") }, onClick = { onDownload(); menu = false })
+                    if(saved?.downloadState in com.mangomusic.downloads.DownloadPolicy.active) DropdownMenuItem(text={ Text("Cancel download") },onClick={ onCancel();menu=false })
+                    if(saved?.localUri!=null) DropdownMenuItem(text={ Text("Remove download") },onClick={ delete=true;menu=false })
                     if (queued) DropdownMenuItem(text = { Text("Remove from queue") }, onClick = { onRemove(); menu = false })
                 }
             }
@@ -461,6 +482,13 @@ private fun NowPlaying(
                     Icon(if (favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(4.dp)); Text(if (favorite) "Saved" else "Favorite")
                 }
+            }
+            if(track!=null && com.mangomusic.downloads.DownloadPolicy.eligible(track)) {
+                val rows by vm.saved.collectAsStateWithLifecycle()
+                val stored=rows.find { it.id==track.id }
+                if(stored?.downloadState in com.mangomusic.downloads.DownloadPolicy.active) TextButton(onClick={ vm.cancelDownload(track) }) { Text("Cancel download · ${com.mangomusic.downloads.DownloadPolicy.percent(stored!!.downloadedBytes,stored.totalBytes)?.let { "$it%" } ?: "Saving…"}") }
+                else if(stored?.localUri!=null) Text("Saved offline",style=MaterialTheme.typography.labelSmall)
+                else TextButton(enabled=!offline,onClick={ vm.download(track) }) { Icon(Icons.Outlined.DownloadForOffline,null,Modifier.size(18.dp));Spacer(Modifier.width(4.dp));Text(if(stored?.downloadState=="FAILED") "Retry download" else "Download") }
             }
             if(track?.id?.startsWith("youtube:")==true || mixEnabled) MixToggle(vm, offline)
             if (compact) Spacer(Modifier.height(16.dp)) else Spacer(Modifier.weight(.5f))

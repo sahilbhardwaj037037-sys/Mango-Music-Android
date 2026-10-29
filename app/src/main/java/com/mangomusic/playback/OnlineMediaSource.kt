@@ -20,7 +20,7 @@ class MangoMediaSourceFactory(private val context: Context, private val online: 
     override fun setLoadErrorHandlingPolicy(policy: LoadErrorHandlingPolicy): MediaSource.Factory { local.setLoadErrorHandlingPolicy(policy); return this }
     override fun getSupportedTypes(): IntArray = local.supportedTypes
     override fun createMediaSource(item: MediaItem): MediaSource =
-        if (item.mediaId.startsWith("youtube:")) OnlineMediaSource(context,online,item) else local.createMediaSource(item)
+        if (item.mediaId.startsWith("youtube:") && item.localConfiguration?.uri?.scheme !in listOf("file","content","asset")) OnlineMediaSource(context,online,item) else local.createMediaSource(item)
 }
 
 /** Resolves on the service/player's behalf, including automatic queue transitions in background. */
@@ -39,6 +39,17 @@ private class OnlineMediaSource(private val context: Context, private val online
         job=CoroutineScope(SupervisorJob()+Dispatchers.IO).launch {
             try {
                 val started=android.os.SystemClock.elapsedRealtime()
+                val app=context.applicationContext as com.mangomusic.MangoApp
+                val saved=app.repository.dao.get(original.mediaId)
+                val offlineCopy=app.downloads.local(saved)
+                if(offlineCopy!=null) {
+                    ensureActive()
+                    handler.post { if(generation==token) {
+                        val source=DefaultMediaSourceFactory(context).createMediaSource(original.buildUpon().setUri(offlineCopy).build())
+                        child=source;prepareChildSource(0,source)
+                    } }
+                    return@launch
+                }
                 val audio=online.resolve(original.mediaId)
                 (context.applicationContext as com.mangomusic.MangoApp).audioDiagnostics.record("sourceResolved","durationMs" to (android.os.SystemClock.elapsedRealtime()-started),"transport" to if (audio.mimeType=="application/x-mpegURL") "hls" else "progressive")
                 ensureActive()

@@ -1,0 +1,148 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 3,
+    "identityHash": "78793063844fca516b27bc7a86205c7e",
+    "entities": [
+      {
+        "tableName": "tracks",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `artist` TEXT NOT NULL, `uri` TEXT NOT NULL, `durationMs` INTEGER NOT NULL, `downloadable` INTEGER NOT NULL, `favorite` INTEGER NOT NULL, `lastPlayed` INTEGER NOT NULL, `playCount` INTEGER NOT NULL, `localUri` TEXT, `downloadId` INTEGER NOT NULL, `downloadError` TEXT, `thumbnailUrl` TEXT, `downloadState` TEXT NOT NULL DEFAULT 'NONE', `downloadedBytes` INTEGER NOT NULL DEFAULT 0, `totalBytes` INTEGER NOT NULL DEFAULT 0, `downloadWork` TEXT, `downloadAttempt` TEXT, `localArtworkUri` TEXT, `fileSha256` TEXT, `downloadPermission` INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "artist",
+            "columnName": "artist",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "uri",
+            "columnName": "uri",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "durationMs",
+            "columnName": "durationMs",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "downloadable",
+            "columnName": "downloadable",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "favorite",
+            "columnName": "favorite",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastPlayed",
+            "columnName": "lastPlayed",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "playCount",
+            "columnName": "playCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "localUri",
+            "columnName": "localUri",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "downloadId",
+            "columnName": "downloadId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "downloadError",
+            "columnName": "downloadError",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "thumbnailUrl",
+            "columnName": "thumbnailUrl",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "downloadState",
+            "columnName": "downloadState",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'NONE'"
+          },
+          {
+            "fieldPath": "downloadedBytes",
+            "columnName": "downloadedBytes",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "totalBytes",
+            "columnName": "totalBytes",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "downloadWork",
+            "columnName": "downloadWork",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "downloadAttempt",
+            "columnName": "downloadAttempt",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "localArtworkUri",
+            "columnName": "localArtworkUri",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "fileSha256",
+            "columnName": "fileSha256",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "downloadPermission",
+            "columnName": "downloadPermission",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '78793063844fca516b27bc7a86205c7e')"
+    ]
+  }
+}

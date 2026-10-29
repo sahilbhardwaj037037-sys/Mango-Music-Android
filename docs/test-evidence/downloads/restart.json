@@ -1,0 +1,21 @@
+{
+  "processRestart": "force-stop and reopen com.mangomusic.validation",
+  "actualSearchResult": "youtube:YE7VzlLtp-4",
+  "title": "Big Buck Bunny",
+  "artist": "Blender",
+  "metadataIdentical": true,
+  "favoritePreserved": true,
+  "localArtworkPreserved": true,
+  "filesIdentical": true,
+  "files": {
+    ".m4a": {
+      "bytes": 28921366,
+      "sha256": "71909b18bbc9fe134e7f209830a7adc0df45b420c41230de6a2651aa37c0d114"
+    },
+    ".art": {
+      "bytes": 45248,
+      "sha256": "70a6acfd4015ed60932ccd627ee305bed54fc81a5f6490ab7057724897b76bfa"
+    }
+  },
+  "nativePlaybackAfterRestart": true
+}

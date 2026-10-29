@@ -1,0 +1,190 @@
+{
+  "date": "2026-10-30",
+  "device": "Mango36 Android 16 API 36 ARM64",
+  "testPackage": "com.mangomusic.validation",
+  "androidPassed": 32,
+  "androidSkipped": 1,
+  "androidFailures": 0,
+  "unitTests": 20,
+  "unitFailures": 0,
+  "lintErrors": 0,
+  "lintWarnings": 37,
+  "apkSha256": "1de95e5d2dada865a902ca00ba1cbcb4abd9184466b144d64087cac3e43bd23f",
+  "unchangedCriticalFiles": [
+    "app/src/main/java/com/mangomusic/playback/PlaybackService.kt",
+    "app/src/main/java/com/mangomusic/playback/MixQueueController.kt",
+    "app/src/main/java/com/mangomusic/playback/AudioPlaybackDiagnostics.kt",
+    "online-runtime/src/main/python/mango_online.py",
+    "scripts/launch-mango.py"
+  ],
+  "tests": [
+    {
+      "class": "com.mangomusic.AudioRepeatDiagnosticsTest",
+      "test": "compareFreshAndNaturalRepeatForTwoSongs",
+      "result": "skipped"
+    },
+    {
+      "class": "com.mangomusic.DownloadUiTest",
+      "test": "permissionDialogCanBeDismissedWithoutStartingDownload",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.DownloadsTest",
+      "test": "realYouTubeDownloadPlaysOfflineWithoutResolver",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.DownloadsTest",
+      "test": "cancelRetryAndStaleLeaseCannotPublish",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.DownloadsTest",
+      "test": "deletionNeverRemovesUnownedFilesOrImportedAudio",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.DownloadsTest",
+      "test": "directCompletionDuplicatePersistenceAndSafeDeletion",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.LibraryTest",
+      "test": "originalAudioImportCopiesAndReadsMetadata",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.LibraryTest",
+      "test": "favoritesAndHistorySurviveDatabaseReopen",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.MigrationTest",
+      "test": "versionOneLibraryAndDownloadArePreserved",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.MixPlaybackTest",
+      "test": "actualRadioExpandsQueueAndPlaysAfterManualSongInBackground",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.MixTest",
+      "test": "manualPriorityShuffleCancellationRepeatAndOffline",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.MixTest",
+      "test": "failedAndEmptyRecommendationsLeavePlaybackAlone",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.MixTest",
+      "test": "lateRecommendationsResumeEndedQueueAtFirstNewSong",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.MixTest",
+      "test": "unavailableRadioFallsBackToRealMusicSearch",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.MixTest",
+      "test": "realProviderRecommendationsAndOfflineGuard",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.MixTest",
+      "test": "disabledDuringFetchCannotAppendStaleResults",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.MixTest",
+      "test": "unavailableAutomaticSongSkipsToManualSong",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.MixUiTest",
+      "test": "mixToggleSurvivesNavigationRecreationAndRespectsOffline",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.NavigationTest",
+      "test": "drawerBackNavigationStateAndRecreationPreservePlayback",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.NavigationTest",
+      "test": "navigationSearchFavoriteAndNowPlaying",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.OnlinePlaybackTest",
+      "test": "actualYouTubeAudioPlaysThroughNativeService",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.OnlinePlaybackTest",
+      "test": "runtimeAndRealSearch",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.OnlinePlaybackTest",
+      "test": "offlineBlocksSearchAndResolutionWithoutRequests",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.OnlinePlaybackTest",
+      "test": "onlineMusicQueueTransitionsAndCacheWork",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.OnlineSearchUiTest",
+      "test": "realResultsSelectNativePlayerAndNewSearchDoesNotInterrupt",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.PcmProbeTest",
+      "test": "fingerprintsPartialWritesWithoutChangingAudio",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.PcmProbeTest",
+      "test": "distinguishesTinyRoundingFromLargeSampleDifferences",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.PlaybackTest",
+      "test": "transientAudioFocusLossPausesAndResumes",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.PlaybackTest",
+      "test": "authorizedDownloadThenLocalPlayback",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.PlaybackTest",
+      "test": "assetPlaybackPauseSeekBackgroundAndModes",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.PlaybackTest",
+      "test": "directHttpsAudioActuallyPlays",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.PlaybackTest",
+      "test": "unavailableSourceReportsFailure",
+      "result": "passed"
+    },
+    {
+      "class": "com.mangomusic.VinylAlignmentTest",
+      "test": "logoSharesDiscCenterAcrossRotationPauseResumeAndResize",
+      "result": "passed"
+    }
+  ],
+  "manualListeningRequired": true,
+  "installedNormalApkVerified": true,
+  "normalAppForeground": true
+}

@@ -1,0 +1,46 @@
+{
+  "date": "2026-10-30",
+  "change": "Confirmation positive label only: Download",
+  "androidTests": [
+    {
+      "class": "com.mangomusic.DownloadUiTest",
+      "test": "permissionDialogCanBeDismissedWithoutStartingDownload",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.DownloadsTest",
+      "test": "realYouTubeDownloadPlaysOfflineWithoutResolver",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.DownloadsTest",
+      "test": "cancelRetryAndStaleLeaseCannotPublish",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.DownloadsTest",
+      "test": "deletionNeverRemovesUnownedFilesOrImportedAudio",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.DownloadsTest",
+      "test": "directCompletionDuplicatePersistenceAndSafeDeletion",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.MigrationTest",
+      "test": "versionOneLibraryAndDownloadArePreserved",
+      "passed": true
+    }
+  ],
+  "unitPassed": 20,
+  "unitFailures": 0,
+  "lintErrors": 0,
+  "lintWarnings": 37,
+  "apkSha256": "e3a3405677ca83e8b9fe70c3c7b47c6f8ece80bed73bf496a103746ecf5f3f3b",
+  "apkBytes": 44564179,
+  "unchangedDialogTitleExplanationCancelHandler": true,
+  "downloadAndPlaybackImplementationsUnchangedFromPreviousValidatedBuild": true,
+  "installedNormalApkChecksumVerified": true,
+  "normalAppForeground": true
+}

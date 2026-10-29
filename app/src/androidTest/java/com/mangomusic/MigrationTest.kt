@@ -23,11 +23,11 @@ class MigrationTest {
         val local=android.net.Uri.fromFile(audio).toString()
         old.execSQL("INSERT INTO tracks VALUES('existing','Existing favorite','Artist','https://example.com/audio.mp3',12000,1,1,1234,7,?,0,NULL)",arrayOf(local))
         old.version=1;old.close()
-        val db=Room.databaseBuilder(context,LibraryDatabase::class.java,name).addMigrations(LibraryDatabase.MIGRATION_1_2).build()
+        val db=Room.databaseBuilder(context,LibraryDatabase::class.java,name).addMigrations(LibraryDatabase.MIGRATION_1_2,LibraryDatabase.MIGRATION_2_3).build()
         try {
             val track=db.library().get("existing")!!
             assertTrue(track.favorite);assertEquals(7,track.playCount);assertEquals(1234L,track.lastPlayed)
-            assertEquals(local,track.localUri);assertNull(track.thumbnailUrl)
+            assertEquals("COMPLETED",track.downloadState);assertEquals(local,track.localUri);assertNull(track.thumbnailUrl)
             assertEquals("preserve-existing-audio",audio.readText())
         } finally { db.close();context.deleteDatabase(name);audio.delete() }
     }
