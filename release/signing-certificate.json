@@ -1,0 +1,7 @@
+{
+  "package": "com.mangomusic",
+  "alias": "mango-music-release",
+  "storeType": "PKCS12",
+  "keyAlgorithm": "RSA-3072",
+  "certificateSha256": "7411c31aa13d6576452066ae7e0fd0a4a5aea5e529d10691c87ffa0f45acfb40"
+}

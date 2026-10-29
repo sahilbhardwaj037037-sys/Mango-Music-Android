@@ -36,3 +36,11 @@ google-services.json
 
 # Detailed local audio investigation traces; summary/findings are retained
 /docs/test-evidence/audio-crackle/comparison-events.json
+
+# Long-term release signing and recovery material (also kept under ignored .local/)
+*.jceks
+keystore.properties
+signing.properties
+signing-*.properties
+*-signing-credentials.*
+signing-credentials.*
