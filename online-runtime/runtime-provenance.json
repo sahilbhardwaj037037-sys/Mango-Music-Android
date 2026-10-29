@@ -1,0 +1,10 @@
+{
+  "quickjsVersion": "0.17.0",
+  "source": "https://packages.termux.dev/apt/termux-main/pool/main/q/quickjs-ng/quickjs-ng_0.17.0_aarch64.deb",
+  "index": "https://packages.termux.dev/apt/termux-main/dists/stable/main/binary-aarch64/Packages",
+  "packageSha256": "7a7df2aa2696ddbe26726a87605c56d0a9eb74fd0a1bd3e0949cd6620483f341",
+  "binaries": {
+    "libmangoqjs.so": "223e73c03cab340d36281d74e3e16ee3b059383c103b04c9d90ff368987b2b0c",
+    "libqjs.so": "0051daa5e635a4a1cd0bdf6360d100c9d7444ebbcfa5451f65173f0a616c49e0"
+  }
+}

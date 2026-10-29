@@ -1,0 +1,13 @@
+{
+  "validationPackage": "com.mangomusic.validation",
+  "discBoundsPx": [
+    188,
+    489,
+    892,
+    1193
+  ],
+  "playingChangedPixels": 159859,
+  "pausedChangedPixels": 0,
+  "resumedChangedPixels": 141636,
+  "compactResizeCaptured": true
+}

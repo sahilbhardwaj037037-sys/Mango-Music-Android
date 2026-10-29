@@ -1,0 +1,8 @@
+// Run UI/playback regressions against a separate app sandbox; preserve the user's library.
+allprojects {
+    plugins.withId('com.android.application') {
+        extensions.getByName('androidComponents').finalizeDsl { androidDsl ->
+            androidDsl.defaultConfig.applicationId = 'com.mangomusic.validation'
+        }
+    }
+}

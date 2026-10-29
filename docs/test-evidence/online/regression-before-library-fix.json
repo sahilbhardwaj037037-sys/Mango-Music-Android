@@ -1,0 +1,84 @@
+{
+  "tests": [
+    {
+      "class": "com.mangomusic.LibraryTest",
+      "name": "originalAudioImportCopiesAndReadsMetadata",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.LibraryTest",
+      "name": "favoritesAndHistorySurviveDatabaseReopen",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.MigrationTest",
+      "name": "versionOneLibraryAndDownloadArePreserved",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.NavigationTest",
+      "name": "drawerBackNavigationStateAndRecreationPreservePlayback",
+      "passed": false
+    },
+    {
+      "class": "com.mangomusic.NavigationTest",
+      "name": "navigationSearchFavoriteAndNowPlaying",
+      "passed": false
+    },
+    {
+      "class": "com.mangomusic.OnlinePlaybackTest",
+      "name": "actualYouTubeAudioPlaysThroughNativeService",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.OnlinePlaybackTest",
+      "name": "runtimeAndRealSearch",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.OnlinePlaybackTest",
+      "name": "offlineBlocksSearchAndResolutionWithoutRequests",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.OnlinePlaybackTest",
+      "name": "onlineMusicQueueTransitionsAndCacheWork",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.OnlineSearchUiTest",
+      "name": "realResultsSelectNativePlayerAndNewSearchDoesNotInterrupt",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.PlaybackTest",
+      "name": "transientAudioFocusLossPausesAndResumes",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.PlaybackTest",
+      "name": "authorizedDownloadThenLocalPlayback",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.PlaybackTest",
+      "name": "assetPlaybackPauseSeekBackgroundAndModes",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.PlaybackTest",
+      "name": "directHttpsAudioActuallyPlays",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.PlaybackTest",
+      "name": "unavailableSourceReportsFailure",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.VinylAlignmentTest",
+      "name": "logoSharesDiscCenterAcrossRotationPauseResumeAndResize",
+      "passed": true
+    }
+  ]
+}

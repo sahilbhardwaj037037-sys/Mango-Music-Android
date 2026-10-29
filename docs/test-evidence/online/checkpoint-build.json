@@ -1,0 +1,27 @@
+{
+  "build": "passed",
+  "apkSha256": "1bb63c922b92441346468e9d904574ac49d157dfc1cf67cc279c9a65684f6baa",
+  "preservedWorkingApkSha256": "1bb63c922b92441346468e9d904574ac49d157dfc1cf67cc279c9a65684f6baa",
+  "rebuiltApkMatchesPreservedWorkingApk": true,
+  "lint": {
+    "app": {
+      "errors": 0,
+      "warnings": 28
+    },
+    "online-runtime": {
+      "errors": 0,
+      "warnings": 1
+    }
+  },
+  "sourceAudit": {
+    "implementationMatchesPreCheckpointBackup": true,
+    "implementationFilesCompared": 50,
+    "changedImplementationFiles": []
+  },
+  "unitTests": {
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "freshExecution": true
+  }
+}

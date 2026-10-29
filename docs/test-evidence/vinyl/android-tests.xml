@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="com.mangomusic.LibraryTest" tests="10" failures="0" errors="0" skipped="0" time="88.501" timestamp="2026-10-29T14:35:51" hostname="localhost">
+  <properties>
+    <property name="device" value="Mango36(AVD) - 16" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="originalAudioImportCopiesAndReadsMetadata" classname="com.mangomusic.LibraryTest" time="0.019" />
+  <testcase name="favoritesAndHistorySurviveDatabaseReopen" classname="com.mangomusic.LibraryTest" time="0.027" />
+  <testcase name="drawerBackNavigationStateAndRecreationPreservePlayback" classname="com.mangomusic.NavigationTest" time="9.298" />
+  <testcase name="navigationSearchFavoriteAndNowPlaying" classname="com.mangomusic.NavigationTest" time="7.99" />
+  <testcase name="transientAudioFocusLossPausesAndResumes" classname="com.mangomusic.PlaybackTest" time="2.052" />
+  <testcase name="authorizedDownloadThenLocalPlayback" classname="com.mangomusic.PlaybackTest" time="3.934" />
+  <testcase name="assetPlaybackPauseSeekBackgroundAndModes" classname="com.mangomusic.PlaybackTest" time="51.292" />
+  <testcase name="directHttpsAudioActuallyPlays" classname="com.mangomusic.PlaybackTest" time="4.91" />
+  <testcase name="unavailableSourceReportsFailure" classname="com.mangomusic.PlaybackTest" time="5.051" />
+  <testcase name="logoSharesDiscCenterAcrossRotationPauseResumeAndResize" classname="com.mangomusic.VinylAlignmentTest" time="3.521" />
+</testsuite>

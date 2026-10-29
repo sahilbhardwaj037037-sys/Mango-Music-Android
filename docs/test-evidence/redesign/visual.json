@@ -1,0 +1,78 @@
+{
+  "playingChangedPixels": 153969,
+  "pausedChangedPixels": 0,
+  "resumedChangedPixels": 162652,
+  "smallScreenTouchTargetsPx": [
+    [
+      756,
+      164
+    ],
+    [
+      407,
+      126
+    ],
+    [
+      438,
+      126
+    ],
+    [
+      756,
+      179
+    ],
+    [
+      126,
+      126
+    ],
+    [
+      126,
+      126
+    ],
+    [
+      756,
+      179
+    ],
+    [
+      126,
+      126
+    ],
+    [
+      126,
+      126
+    ],
+    [
+      756,
+      179
+    ],
+    [
+      126,
+      126
+    ],
+    [
+      126,
+      126
+    ],
+    [
+      126,
+      126
+    ],
+    [
+      126,
+      126
+    ],
+    [
+      840,
+      168
+    ],
+    [
+      126,
+      126
+    ],
+    [
+      126,
+      126
+    ]
+  ],
+  "landscapeControlsReachable": true,
+  "drawerAndSingleQueueHeading": true,
+  "smallScreenAndLargeText": true
+}

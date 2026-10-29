@@ -1,0 +1,8 @@
+{
+  "app/src/main/java/com/mangomusic/ui/MusicViewModel.kt": true,
+  "app/src/main/java/com/mangomusic/data/Library.kt": true,
+  "app/src/main/java/com/mangomusic/playback/PlaybackService.kt": true,
+  "scripts/launch-mango.sh": true,
+  "scripts/launch-mango.py": true,
+  "original_logo_bytes_match": true
+}

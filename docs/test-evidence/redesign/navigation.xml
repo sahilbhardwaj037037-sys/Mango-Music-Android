@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="com.mangomusic.NavigationTest" tests="2" failures="0" errors="0" skipped="0" time="19.202" timestamp="2026-10-29T14:11:12" hostname="localhost">
+  <properties>
+    <property name="device" value="Mango36(AVD) - 16" />
+    <property name="flavor" value="" />
+    <property name="project" value=":app" />
+  </properties>
+  <testcase name="drawerBackNavigationStateAndRecreationPreservePlayback" classname="com.mangomusic.NavigationTest" time="10.73" />
+  <testcase name="navigationSearchFavoriteAndNowPlaying" classname="com.mangomusic.NavigationTest" time="7.72" />
+</testsuite>

@@ -1,0 +1,89 @@
+{
+  "device": "Mango36 / Android 16 / API 36 / arm64-v8a",
+  "package": "com.mangomusic.validation",
+  "note": "Full 16-test regression had two navigation timeouts caused by online rows entering Library. After scoping Library to demos/imports/direct links, both original navigation tests passed in a targeted rerun. All other checks passed in the full run.",
+  "distinctTests": 16,
+  "allPassed": true,
+  "tests": [
+    {
+      "class": "com.mangomusic.LibraryTest",
+      "name": "originalAudioImportCopiesAndReadsMetadata",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.LibraryTest",
+      "name": "favoritesAndHistorySurviveDatabaseReopen",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.MigrationTest",
+      "name": "versionOneLibraryAndDownloadArePreserved",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.NavigationTest",
+      "name": "drawerBackNavigationStateAndRecreationPreservePlayback",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.NavigationTest",
+      "name": "navigationSearchFavoriteAndNowPlaying",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.OnlinePlaybackTest",
+      "name": "actualYouTubeAudioPlaysThroughNativeService",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.OnlinePlaybackTest",
+      "name": "runtimeAndRealSearch",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.OnlinePlaybackTest",
+      "name": "offlineBlocksSearchAndResolutionWithoutRequests",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.OnlinePlaybackTest",
+      "name": "onlineMusicQueueTransitionsAndCacheWork",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.OnlineSearchUiTest",
+      "name": "realResultsSelectNativePlayerAndNewSearchDoesNotInterrupt",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.PlaybackTest",
+      "name": "transientAudioFocusLossPausesAndResumes",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.PlaybackTest",
+      "name": "authorizedDownloadThenLocalPlayback",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.PlaybackTest",
+      "name": "assetPlaybackPauseSeekBackgroundAndModes",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.PlaybackTest",
+      "name": "directHttpsAudioActuallyPlays",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.PlaybackTest",
+      "name": "unavailableSourceReportsFailure",
+      "passed": true
+    },
+    {
+      "class": "com.mangomusic.VinylAlignmentTest",
+      "name": "logoSharesDiscCenterAcrossRotationPauseResumeAndResize",
+      "passed": true
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "assembleDebug": "passed",
+  "unitTests": 6,
+  "unitFailures": 0,
+  "lint": {
+    "app": {
+      "errors": 0,
+      "warnings": 28
+    },
+    "online-runtime": {
+      "errors": 0,
+      "warnings": 1
+    }
+  }
+}

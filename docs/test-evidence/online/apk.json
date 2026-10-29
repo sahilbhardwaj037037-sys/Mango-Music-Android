@@ -1,0 +1,11 @@
+{
+  "path": "/Users/sahilbhardwaj/Developer/MangoMusic-Android/app/build/outputs/apk/debug/app-debug.apk",
+  "bytes": 44148995,
+  "sha256": "1bb63c922b92441346468e9d904574ac49d157dfc1cf67cc279c9a65684f6baa",
+  "applicationId": "com.mangomusic",
+  "installedAndLaunched": true,
+  "emulator": "Mango36 / emulator-5556",
+  "launcherUnchanged": true,
+  "temporaryTestPackageRemoved": true,
+  "installedApkSha256Matches": true
+}

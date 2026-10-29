@@ -1,0 +1,70 @@
+{
+  "runtime": {
+    "python": "3.14.8",
+    "ytDlp": "2026.10.26",
+    "quickJs": "0.17.0",
+    "quickJsExit": 0
+  },
+  "results": [
+    {
+      "id": "youtube:sMcWOaJFuw0",
+      "title": "Carefree",
+      "artist": "Kevin MacLeod",
+      "thumbnail": "https:\/\/i.ytimg.com\/vi\/sMcWOaJFuw0\/hq720.jpg?sqp=-oaymwE2CNAFEJQDSFXyq4qpAygIARUAAIhCGAFwAcABBvABAfgB_gmAAtAFigIMCAAQARhlIFcoSjAP&rs=AOn4CLD4KNgN0poUTlKnNvuylViJ3RI7jQ"
+    },
+    {
+      "id": "youtube:owrhKIN3Y90",
+      "title": "Carefree – Kevin MacLeod (No Copyright Music)",
+      "artist": "Audio Library",
+      "thumbnail": "https:\/\/i.ytimg.com\/vi\/owrhKIN3Y90\/hq720.jpg?sqp=-oaymwEcCNAFEJQDSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLBdxmKT91cYcMYTKTTWHAfYiF6KNw"
+    },
+    {
+      "id": "youtube:4zZFcoKJ6yc",
+      "title": "Kevin MacLeod: Carefree [1 HOUR]",
+      "artist": "Kevin MacLeod Archive",
+      "thumbnail": "https:\/\/i.ytimg.com\/vi\/4zZFcoKJ6yc\/hq720.jpg?sqp=-oaymwEcCNAFEJQDSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLCiPNPKjefCOCj5lRDjLOR1Y1PNag"
+    },
+    {
+      "id": "youtube:twdNHG3NKQU",
+      "title": "Kevin Macleod: Carefree",
+      "artist": "Kevin MacLeod Archive",
+      "thumbnail": "https:\/\/i.ytimg.com\/vi\/twdNHG3NKQU\/hq720.jpg?sqp=-oaymwEcCNAFEJQDSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLAFtrMZIgtb5-gCT9QDIywVkpPtEA"
+    },
+    {
+      "id": "youtube:qapK8Gx6ZTo",
+      "title": "Carefree",
+      "artist": "Kevin MacLeod",
+      "thumbnail": "https:\/\/i.ytimg.com\/vi\/qapK8Gx6ZTo\/hq720.jpg?sqp=-oaymwEcCNAFEJQDSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLDBy_xmonHkr1k6BRKu_S_FynhAYw"
+    },
+    {
+      "id": "youtube:jMfDqO9lGZg",
+      "title": "carefree - kevin macleod (FULL SONG)",
+      "artist": "MyNameFishy",
+      "thumbnail": "https:\/\/i.ytimg.com\/vi\/jMfDqO9lGZg\/hq720.jpg?sqp=-oaymwE2CNAFEJQDSFXyq4qpAygIARUAAIhCGAFwAcABBvABAfgB_gmAAtAFigIMCAAQARhlIFkoTjAP&rs=AOn4CLDe414JtbN3TprBlh4L9y5wUbX38Q"
+    },
+    {
+      "id": "youtube:PhiagGezMD0",
+      "title": "Kevin MacLeod - Carefree (Official Music Video)",
+      "artist": "overman138",
+      "thumbnail": "https:\/\/i.ytimg.com\/vi\/PhiagGezMD0\/hqdefault.jpg?sqp=-oaymwE2COADEI4CSFXyq4qpAygIARUAAIhCGAFwAcABBvABAfgB1AaAAuADigIMCAAQARgWIFIofzAP&rs=AOn4CLCKkdl_2zr0S57NcX5OcGgkyVIjnA"
+    },
+    {
+      "id": "youtube:QGXyseNd6ug",
+      "title": "Carefree – Kevin MacLeod (No Copyright Music).mp4 live",
+      "artist": "Kamai ",
+      "thumbnail": "https:\/\/i.ytimg.com\/vi\/QGXyseNd6ug\/hqdefault.jpg?sqp=-oaymwEcCOADEI4CSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLDyiQFaXtRL-v9j7TbqL83uqlrKaQ"
+    },
+    {
+      "id": "youtube:LXHHQEKIQg8",
+      "title": "Kevin MacLeod - Carefree",
+      "artist": "Manuel Campillo",
+      "thumbnail": "https:\/\/i.ytimg.com\/vi\/LXHHQEKIQg8\/hqdefault.jpg?sqp=-oaymwEcCOADEI4CSFXyq4qpAw4IARUAAIhCGAFwAcABBg==&rs=AOn4CLDsNCj6nXESq37C6iAcn0AAaDLnRA"
+    },
+    {
+      "id": "youtube:rZWLwz9_7o0",
+      "title": "Kevin MacLeod ~ Carefree",
+      "artist": "EricArchive",
+      "thumbnail": "https:\/\/i.ytimg.com\/vi\/rZWLwz9_7o0\/hqdefault.jpg?sqp=-oaymwE2COADEI4CSFXyq4qpAygIARUAAIhCGAFwAcABBvABAfgB_gSAAugCigIMCAAQARhLIEsoZTAP&rs=AOn4CLCMbJ9eI_Lom484kZxTjPTK-sxAbg"
+    }
+  ]
+}

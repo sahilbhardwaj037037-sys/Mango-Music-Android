@@ -1,0 +1,35 @@
+.gradle/
+.tools/
+.local/
+**/build/
+local.properties
+*.iml
+.idea/
+__pycache__/
+
+# Local tooling and diagnostics
+.kotlin/
+.DS_Store
+.cxx/
+.externalNativeBuild/
+captures/
+*.log
+*.hprof
+*.apk
+*.aab
+
+# Local credentials and signing material
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.key
+*service-account*.json
+google-services.json
+
+# Curated validation logs referenced by project documentation
+!docs/test-evidence/**/*.log

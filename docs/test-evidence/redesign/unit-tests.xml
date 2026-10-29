@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.mangomusic.DomainTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-10-29T14:10:44.729Z" hostname="Sahils-MacBook-Air.local" time="0.021">
+  <properties/>
+  <testcase name="searchRejectsControlCharacters" classname="com.mangomusic.DomainTest" time="0.016"/>
+  <testcase name="pauseFreezesAndResumeKeepsDiscAngle" classname="com.mangomusic.DomainTest" time="0.001"/>
+  <testcase name="timeFormattingHandlesUnknownAndNegative" classname="com.mangomusic.DomainTest" time="0.001"/>
+  <testcase name="searchHandlesWhitespaceCaseAndDuplicates" classname="com.mangomusic.DomainTest" time="0.003"/>
+  <testcase name="discHandlesWrapAndLongFrameWithoutJump" classname="com.mangomusic.DomainTest" time="0.0"/>
+  <testcase name="searchBoundsQuery" classname="com.mangomusic.DomainTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

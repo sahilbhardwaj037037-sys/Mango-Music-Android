@@ -1,0 +1,44 @@
+[
+  {
+    "name": "originalAudioImportCopiesAndReadsMetadata",
+    "classname": "com.mangomusic.LibraryTest",
+    "time": "0.004",
+    "passed": true
+  },
+  {
+    "name": "favoritesAndHistorySurviveDatabaseReopen",
+    "classname": "com.mangomusic.LibraryTest",
+    "time": "0.001",
+    "passed": true
+  },
+  {
+    "name": "transientAudioFocusLossPausesAndResumes",
+    "classname": "com.mangomusic.PlaybackTest",
+    "time": "2.635",
+    "passed": true
+  },
+  {
+    "name": "authorizedDownloadThenLocalPlayback",
+    "classname": "com.mangomusic.PlaybackTest",
+    "time": "4.067",
+    "passed": true
+  },
+  {
+    "name": "assetPlaybackPauseSeekBackgroundAndModes",
+    "classname": "com.mangomusic.PlaybackTest",
+    "time": "51.016",
+    "passed": true
+  },
+  {
+    "name": "directHttpsAudioActuallyPlays",
+    "classname": "com.mangomusic.PlaybackTest",
+    "time": "3.188",
+    "passed": true
+  },
+  {
+    "name": "unavailableSourceReportsFailure",
+    "classname": "com.mangomusic.PlaybackTest",
+    "time": "5.014",
+    "passed": true
+  }
+]
