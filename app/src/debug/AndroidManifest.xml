@@ -1,0 +1,9 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <activity
+            android:name=".ui.prototype.PrototypeActivity"
+            android:exported="false"
+            android:label="Mango v2 Prototypes"
+            android:theme="@style/Theme.Mango" />
+    </application>
+</manifest>

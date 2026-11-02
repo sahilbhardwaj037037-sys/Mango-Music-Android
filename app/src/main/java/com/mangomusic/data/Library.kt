@@ -31,6 +31,7 @@ interface LibraryDao {
     @Query("SELECT * FROM tracks ORDER BY title COLLATE NOCASE") fun observe(): Flow<List<SavedTrack>>
     @Query("SELECT * FROM tracks WHERE id=:id") suspend fun get(id: String): SavedTrack?
     @Insert(onConflict = OnConflictStrategy.IGNORE) suspend fun insert(track: SavedTrack)
+    @Insert(onConflict = OnConflictStrategy.IGNORE) suspend fun insertAll(tracks: List<SavedTrack>)
     @Query("UPDATE tracks SET favorite = NOT favorite WHERE id=:id") suspend fun toggleFavorite(id: String)
     @Query("UPDATE tracks SET lastPlayed=:now, playCount=playCount+1 WHERE id=:id") suspend fun played(id: String, now: Long)
     @Query("DELETE FROM tracks WHERE id=:id") suspend fun delete(id: String)
@@ -53,9 +54,10 @@ interface LibraryDao {
     suspend fun clearDownload(id:String)
 
 }
-@Database(entities = [SavedTrack::class], version = 3, exportSchema = true)
+@Database(entities = [SavedTrack::class, PlaylistEntity::class, PlaylistTrackEntity::class], version = 4, exportSchema = true)
 abstract class LibraryDatabase: RoomDatabase() {
     abstract fun library(): LibraryDao
+    abstract fun playlists(): PlaylistDao
     companion object {
         val MIGRATION_1_2 = object: androidx.room.migration.Migration(1,2) {
             override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) { db.execSQL("ALTER TABLE tracks ADD COLUMN thumbnailUrl TEXT") }
@@ -70,16 +72,54 @@ abstract class LibraryDatabase: RoomDatabase() {
                 db.execSQL("UPDATE tracks SET downloadState='COMPLETED' WHERE localUri IS NOT NULL")
             }
         }
-
+        val MIGRATION_3_4 = object: androidx.room.migration.Migration(3,4) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `playlists` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `name` TEXT NOT NULL,
+                        `description` TEXT NOT NULL DEFAULT '',
+                        `createdAt` INTEGER NOT NULL DEFAULT 0,
+                        `updatedAt` INTEGER NOT NULL DEFAULT 0
+                    )
+                """.trimIndent())
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `playlist_tracks` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `playlistId` INTEGER NOT NULL,
+                        `trackId` TEXT NOT NULL,
+                        `position` INTEGER NOT NULL DEFAULT 0,
+                        `addedAt` INTEGER NOT NULL DEFAULT 0,
+                        `title` TEXT NOT NULL,
+                        `artist` TEXT NOT NULL,
+                        `uri` TEXT NOT NULL,
+                        `durationMs` INTEGER NOT NULL DEFAULT 0,
+                        `downloadable` INTEGER NOT NULL DEFAULT 0,
+                        `thumbnailUrl` TEXT,
+                        FOREIGN KEY(`playlistId`) REFERENCES `playlists`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
+                    )
+                """.trimIndent())
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_playlist_tracks_playlistId_trackId` ON `playlist_tracks` (`playlistId`, `trackId`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_playlist_tracks_playlistId_position` ON `playlist_tracks` (`playlistId`, `position`)")
+            }
+        }
     }
 }
 
 class LibraryRepository(private val context: Context) {
-    val db = Room.databaseBuilder(context, LibraryDatabase::class.java, "mango.db").addMigrations(LibraryDatabase.MIGRATION_1_2,LibraryDatabase.MIGRATION_2_3).build()
+    val db = Room.databaseBuilder(context, LibraryDatabase::class.java, "mango.db")
+        .addMigrations(LibraryDatabase.MIGRATION_1_2, LibraryDatabase.MIGRATION_2_3, LibraryDatabase.MIGRATION_3_4)
+        .build()
     val dao = db.library()
+    val playlistDao = db.playlists()
     val tracks = dao.observe()
-    suspend fun seed() { Catalog.samples.forEach { add(it) } }
+    val playlists = playlistDao.observePlaylistsWithTracks()
+    suspend fun seed() { addAll(Catalog.samples) }
     suspend fun add(track: Track) { dao.insert(SavedTrack(track.id, track.title, track.artist, track.uri, track.durationMs, track.downloadable, thumbnailUrl = track.thumbnailUrl)) }
+    suspend fun addAll(tracks: List<Track>) {
+        if (tracks.isEmpty()) return
+        dao.insertAll(tracks.map { SavedTrack(it.id, it.title, it.artist, it.uri, it.durationMs, it.downloadable, thumbnailUrl = it.thumbnailUrl) })
+    }
     suspend fun import(uri: Uri) = withContext(Dispatchers.IO) {
         val id = UUID.randomUUID().toString()
         val folder = File(context.filesDir, "imports").apply { mkdirs() }

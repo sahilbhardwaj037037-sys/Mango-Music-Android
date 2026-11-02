@@ -45,7 +45,7 @@ class OnlineRepository(context: Context): RecommendationProvider {
         if (value) activeCalls.forEach { it.set(true) }
         if (value) scope.launch { mutex.withLock { inFlight.values.forEach { it.cancel() }; inFlight.clear(); cache.clear() } }
     }
-    private suspend fun call(operation: String, value: String): JSONObject = withTimeout(45000) {
+    private suspend fun call(operation: String, value: String): JSONObject = withTimeout(180000) {
         if (operation != "diagnostics" && offline.value) throw OnlineFailure("offline")
         val raw = suspendCancellableCoroutine<String> { continuation ->
             val cancelled = AtomicBoolean(false)
@@ -125,12 +125,14 @@ class OnlineRepository(context: Context): RecommendationProvider {
                 val rawHeaders=json.optJSONObject("headers") ?: JSONObject()
                 val headers=rawHeaders.keys().asSequence().associateWith { rawHeaders.getString(it) }
                     .filter { (key,value) -> '\n' !in key && '\r' !in key && '\n' !in value && '\r' !in value }
-                val expiration=Uri.parse(url).getQueryParameter("expire")?.toLongOrNull()?.times(1000)?.minus(60000)
-                val audio=ResolvedAudio(url,json.getString("mimeType"),headers,minOf(System.currentTimeMillis()+180000,expiration ?: Long.MAX_VALUE))
+                val parsedExpiry = Uri.parse(url).getQueryParameter("expire")?.toLongOrNull()?.times(1000)?.minus(60000L)
+                val now = System.currentTimeMillis()
+                val validUntil = if (parsedExpiry != null && parsedExpiry > now) parsedExpiry else now + 180000L
+                val audio=ResolvedAudio(url,json.getString("mimeType"),headers,validUntil)
                 mutex.withLock {
                     if (!offline.value) {
                         cache.entries.removeAll { it.value.validUntil <= System.currentTimeMillis() }
-                        if (cache.size >= 24 && id !in cache) cache.remove(cache.keys.first())
+                        if (cache.size >= 50 && id !in cache) cache.remove(cache.keys.first())
                         cache[id]=audio
                     }
                 }

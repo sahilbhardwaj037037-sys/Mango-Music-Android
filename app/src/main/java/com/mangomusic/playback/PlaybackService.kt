@@ -24,9 +24,25 @@ class PlaybackService: MediaSessionService() {
         val diagnostics = (application as MangoApp).audioDiagnostics
         var retryId: String? = null
         var retries = 0
-        val player = ExoPlayer.Builder(this, diagnostics.renderers(this)).setMediaSourceFactory(MangoMediaSourceFactory(this, online)).setAudioAttributes(
-            AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).build(), true)
-            .setHandleAudioBecomingNoisy(true).build()
+        var consecutiveSkips = 0
+        val loadControl = androidx.media3.exoplayer.DefaultLoadControl.Builder()
+            .setBufferDurationsMs(
+                /* minBufferMs = */ 15_000,
+                /* maxBufferMs = */ 50_000,
+                /* bufferForPlaybackMs = */ 600,
+                /* bufferForPlaybackAfterRebufferMs = */ 1_200
+            )
+            .setPrioritizeTimeOverSizeThresholds(true)
+            .build()
+        val player = ExoPlayer.Builder(this, diagnostics.renderers(this))
+            .setMediaSourceFactory(MangoMediaSourceFactory(this, online))
+            .setLoadControl(loadControl)
+            .setAudioAttributes(
+                AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).build(),
+                true
+            )
+            .setHandleAudioBecomingNoisy(true)
+            .build()
         if (diagnostics.enabled) {
             player.addAnalyticsListener(diagnostics.listener(player))
             scope.launch { while (isActive) { diagnostics.sample(player); delay(5000) } }
@@ -36,25 +52,50 @@ class PlaybackService: MediaSessionService() {
         player.repeatMode = prefs.getInt("repeat", Player.REPEAT_MODE_OFF)
         player.shuffleModeEnabled = prefs.getBoolean("shuffle", false)
         player.addListener(object: Player.Listener {
-            override fun onMediaItemTransition(item: androidx.media3.common.MediaItem?, reason: Int) { recordedId = null; retryId = item?.mediaId; retries = 0 }
+            override fun onMediaItemTransition(item: androidx.media3.common.MediaItem?, reason: Int) {
+                recordedId = null
+                retryId = item?.mediaId
+                retries = 0
+                if (reason != Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) consecutiveSkips = 0
+            }
             override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
                 val id = player.currentMediaItem?.mediaId ?: return
                 if (!id.startsWith("youtube:")) return
                 online.invalidate(id)
-                val retryable = error.errorCode in listOf(2001, 2002, 2004)
+                val retryable = error.errorCode in listOf(
+                    androidx.media3.common.PlaybackException.ERROR_CODE_IO_UNSPECIFIED,
+                    androidx.media3.common.PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
+                    androidx.media3.common.PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT,
+                    androidx.media3.common.PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS
+                )
                 if (retryable && retries < 1 && !online.offline.value) {
                     retries++
                     scope.launch {
-                        delay(700)
+                        delay(600)
                         if (retryId == id && player.currentMediaItem?.mediaId == id && !online.offline.value) player.prepare()
+                    }
+                } else {
+                    if (player.hasNextMediaItem() && consecutiveSkips < 5) {
+                        consecutiveSkips++
+                        scope.launch {
+                            delay(400)
+                            if (player.playbackState == Player.STATE_IDLE && player.hasNextMediaItem()) {
+                                player.seekToNextMediaItem()
+                                player.prepare()
+                                player.play()
+                            }
+                        }
                     }
                 }
             }
             override fun onEvents(player: Player, events: Player.Events) {
                 val id = player.currentMediaItem?.mediaId ?: return
-                if (player.isPlaying && recordedId != id) {
-                    recordedId = id
-                    scope.launch { (application as MangoApp).repository.dao.played(id, System.currentTimeMillis()) }
+                if (player.isPlaying) {
+                    consecutiveSkips = 0
+                    if (recordedId != id) {
+                        recordedId = id
+                        scope.launch { (application as MangoApp).repository.dao.played(id, System.currentTimeMillis()) }
+                    }
                 }
                 if (player.isPlaying && player.nextMediaItemIndex >= 0) online.prefetch(player.getMediaItemAt(player.nextMediaItemIndex).mediaId)
             }

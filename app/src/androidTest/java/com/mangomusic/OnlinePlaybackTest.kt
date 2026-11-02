@@ -45,6 +45,96 @@ class OnlinePlaybackTest {
         File(context.filesDir,"online-search-evidence.json").writeText(JSONObject().put("runtime",diagnostics)
             .put("results",JSONArray(tracks.map { JSONObject().put("id",it.id).put("title",it.title).put("artist",it.artist).put("thumbnail",it.thumbnailUrl) })).toString(2))
     }
+    @Test fun testResolveRaufFaik() = runBlocking {
+        app.online.setOffline(false)
+        val audio = app.online.resolve("youtube:m-el0pQLQE4")
+        assertTrue("Stream URI should be HTTPS", audio.uri.startsWith("https://"))
+        assertTrue("MIME type should be audio compatible", audio.mimeType in listOf("audio/mp4", "audio/webm", "application/x-mpegURL"))
+        assertTrue("validUntil should be in the future", audio.validUntil > System.currentTimeMillis())
+    }
+    @Test fun testCacheReuseAndInvalidation() = runBlocking {
+        app.online.setOffline(false)
+        val id = "youtube:m-el0pQLQE4"
+        val first = app.online.resolve(id)
+        val initialRequests = app.online.requestsStarted.get()
+
+        val second = app.online.resolve(id)
+        assertEquals(first.uri, second.uri)
+        assertEquals("Cached lookup should not make a new network request", initialRequests, app.online.requestsStarted.get())
+
+        app.online.invalidate(id)
+        kotlinx.coroutines.delay(100)
+        val third = app.online.resolve(id)
+        assertEquals("Invalidation should trigger a fresh extraction request", initialRequests + 1, app.online.requestsStarted.get())
+        assertTrue(third.uri.startsWith("https://"))
+    }
+    @Test fun testActualRaufFaikPlaysThroughNativePlayer() {
+        app.online.setOffline(false)
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            lateinit var future: ListenableFuture<MediaController>
+            main { future = MediaController.Builder(context, SessionToken(context, ComponentName(context, PlaybackService::class.java))).buildAsync() }
+            val player = future.get(20, TimeUnit.SECONDS)
+            val track = com.mangomusic.domain.Track("youtube:m-el0pQLQE4", "childhood", "Rauf & Faik", "https://www.youtube.com/watch?v=m-el0pQLQE4")
+            runBlocking { app.repository.add(track) }
+            fun item(t: com.mangomusic.domain.Track) = MediaItem.Builder().setMediaId(t.id).setUri(t.uri).setMediaMetadata(MediaMetadata.Builder().setTitle(t.title).setArtist(t.artist).build()).build()
+            try {
+                main {
+                    player.repeatMode = Player.REPEAT_MODE_OFF
+                    player.shuffleModeEnabled = false
+                    player.setMediaItem(item(track))
+                    player.prepare()
+                    player.play()
+                }
+                await("Rauf & Faik audio did not decode/play through Media3", timeout = 60000) {
+                    player.isPlaying && player.currentPosition > 1000
+                }
+                main {
+                    assertTrue("Player should be playing Rauf & Faik", player.isPlaying)
+                    assertTrue("Duration should be > 0", player.duration > 0)
+                    assertNull("playerError must be null", player.playerError)
+                }
+            } finally {
+                main {
+                    player.stop()
+                    player.clearMediaItems()
+                    player.release()
+                }
+            }
+        }
+    }
+    @Test fun testQueueAdvancesOnUnplayableTrack() {
+        app.online.setOffline(false)
+        ActivityScenario.launch(MainActivity::class.java).use { scenario ->
+            lateinit var future: ListenableFuture<MediaController>
+            main { future = MediaController.Builder(context, SessionToken(context, ComponentName(context, PlaybackService::class.java))).buildAsync() }
+            val player = future.get(20, TimeUnit.SECONDS)
+            val badTrack = com.mangomusic.domain.Track("youtube:ZZZZZZZZZZZ", "Unplayable Track", "Unknown", "https://www.youtube.com/watch?v=ZZZZZZZZZZZ")
+            val goodTrack = com.mangomusic.domain.Track("youtube:aqz-KE-bpKQ", "Big Buck Bunny", "Blender Foundation", "https://www.youtube.com/watch?v=aqz-KE-bpKQ")
+            runBlocking {
+                app.repository.add(badTrack)
+                app.repository.add(goodTrack)
+            }
+            fun item(t: com.mangomusic.domain.Track) = MediaItem.Builder().setMediaId(t.id).setUri(t.uri).setMediaMetadata(MediaMetadata.Builder().setTitle(t.title).setArtist(t.artist).build()).build()
+            try {
+                main {
+                    player.repeatMode = Player.REPEAT_MODE_OFF
+                    player.shuffleModeEnabled = false
+                    player.setMediaItems(listOf(item(badTrack), item(goodTrack)))
+                    player.prepare()
+                    player.play()
+                }
+                await("Player did not automatically advance to playable track in queue", timeout = 60000) {
+                    player.currentMediaItem?.mediaId == goodTrack.id && player.isPlaying && player.currentPosition > 500
+                }
+            } finally {
+                main {
+                    player.stop()
+                    player.clearMediaItems()
+                    player.release()
+                }
+            }
+        }
+    }
     @Test fun offlineBlocksSearchAndResolutionWithoutRequests()=runBlocking {
         app.online.setOffline(true)
         val before=app.online.requestsStarted.get()

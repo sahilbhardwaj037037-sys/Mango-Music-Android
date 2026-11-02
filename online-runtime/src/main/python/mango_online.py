@@ -6,7 +6,67 @@ import re
 import subprocess
 import sys
 import time
+import socket
 import yt_dlp
+
+_orig_getaddrinfo = socket.getaddrinfo
+_dns_cache = {}
+
+def _fallback_dns(host):
+    if host in _dns_cache:
+        return _dns_cache[host]
+    for dns_ip in ("8.8.8.8", "1.1.1.1"):
+        try:
+            import random
+            qid = random.randint(1, 65535)
+            header = qid.to_bytes(2, "big") + b"\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00"
+            qname = b"".join(len(part).to_bytes(1, "big") + part.encode() for part in host.split(".")) + b"\x00"
+            packet = header + qname + b"\x00\x01\x00\x01"
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.settimeout(2.0)
+            s.sendto(packet, (dns_ip, 53))
+            data, _ = s.recvfrom(512)
+            s.close()
+            idx = 12
+            while data[idx] != 0:
+                if (data[idx] & 0xC0) == 0xC0:
+                    idx += 2
+                    break
+                idx += 1 + data[idx]
+            else:
+                idx += 1
+            idx += 4
+            ancount = int.from_bytes(data[6:8], "big")
+            for _ in range(ancount):
+                if idx >= len(data): break
+                if (data[idx] & 0xC0) == 0xC0:
+                    idx += 2
+                else:
+                    while data[idx] != 0: idx += 1 + data[idx]
+                    idx += 1
+                rtype = int.from_bytes(data[idx:idx+2], "big")
+                rdlength = int.from_bytes(data[idx+8:idx+10], "big")
+                idx += 10
+                if rtype == 1 and rdlength == 4:
+                    ip = ".".join(str(b) for b in data[idx:idx+4])
+                    _dns_cache[host] = ip
+                    return ip
+                idx += rdlength
+        except Exception:
+            continue
+    return None
+
+def _guarded_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
+    try:
+        return _orig_getaddrinfo(host, port, family, type, proto, flags)
+    except socket.gaierror:
+        if isinstance(host, str) and not host.replace('.', '').isdigit():
+            ip = _fallback_dns(host)
+            if ip:
+                return _orig_getaddrinfo(ip, port, family, type, proto, flags)
+        raise
+
+socket.getaddrinfo = _guarded_getaddrinfo
 
 class Cancelled(Exception):
     pass
@@ -30,9 +90,11 @@ def options(qjs, cancelled):
     logger = QuietLogger(cancelled)
     return {
         'quiet': True, 'no_warnings': True, 'logger': logger, '_mango_cancelled': cancelled,
-        'socket_timeout': 12, 'retries': 1, 'extractor_retries': 1,
+        'source_address': '0.0.0.0',
+        'socket_timeout': 20, 'retries': 1, 'extractor_retries': 1,
         'noplaylist': True, 'skip_download': True, 'cachedir': False,
         'js_runtimes': {'quickjs': {'path': qjs}}, 'remote_components': [],
+        'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
         'progress_hooks': [lambda event: logger.check()],
     }
 
@@ -91,13 +153,14 @@ def execute(operation, value, qjs, cancelled, temp_root):
             result={'tracks': entries, 'source': 'radio'}
         elif operation == 'resolve':
             if not re.fullmatch(r'[A-Za-z0-9_-]{11}', value): raise ValueError()
-            opts['format'] = 'bestaudio[protocol^=m3u8]/bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio'
+            opts['format'] = 'bestaudio[protocol^=m3u8]/bestaudio[ext=m4a]/bestaudio[ext=webm]/bestaudio/best[acodec!=none]'
             with GuardedYoutubeDL(opts) as ydl:
                 data=ydl.extract_info('https://www.youtube.com/watch?v=' + value, download=False)
             if data.get('availability') in ('private','premium_only','subscriber_only','needs_auth'):
                 return json.dumps({'error':'restricted'})
             url=data.get('url','')
-            if not url.startswith('https://') or data.get('vcodec') not in ('none', None):
+            acodec=data.get('acodec')
+            if not url.startswith('https://') or acodec in ('none', None):
                 return json.dumps({'error':'unavailable'})
             protocol=data.get('protocol','')
             mime='application/x-mpegURL' if 'm3u8' in protocol else ('audio/webm' if data.get('ext')=='webm' else 'audio/mp4')
@@ -111,7 +174,7 @@ def execute(operation, value, qjs, cancelled, temp_root):
     except Exception as error:
         # Inspect for classification only. Never return/log raw extractor URLs, headers or tokens.
         text=str(error).lower()
-        if any(word in text for word in ('sign in','login','private','members-only','age-restrict','not available in your country','not a bot','confirm your age')):
+        if any(word in text for word in ('private','members-only','age-restrict','not available in your country','georestricted','confirm your age','premium_only')):
             category='restricted'
         elif any(word in text for word in ('timed out','timeout')):category='timeout'
         elif any(word in text for word in ('unable to download','network','resolve','connection')):category='network'

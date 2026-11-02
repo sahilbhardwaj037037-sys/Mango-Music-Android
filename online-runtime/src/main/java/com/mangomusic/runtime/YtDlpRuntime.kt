@@ -23,5 +23,14 @@ class YtDlpRuntime(private val context: Context) {
         check(qjs.canExecute())
         return Python.getInstance().getModule("mango_download").callAttr("download",id,folder,qjs.absolutePath,cancelled,progress,maxBytes,reserveBytes,context.cacheDir.absolutePath).toString()
     }
-    private companion object { val startLock = Any() }
+    companion object {
+        val startLock = Any()
+        fun warmup(context: Context) {
+            synchronized(startLock) {
+                if (!Python.isStarted()) {
+                    Python.start(AndroidPlatform(context.applicationContext))
+                }
+            }
+        }
+    }
 }
