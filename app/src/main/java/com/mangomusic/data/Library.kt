@@ -114,6 +114,16 @@ class LibraryRepository(private val context: Context) {
     val playlistDao = db.playlists()
     val tracks = dao.observe()
     val playlists = playlistDao.observePlaylistsWithTracks()
+    suspend fun cleanupDemoTracks() = withContext(Dispatchers.IO) {
+        try {
+            db.openHelper.writableDatabase.execSQL(
+                "DELETE FROM tracks WHERE id IN ('mango-dawn', 'mango-orbit', 'mango-dusk') AND uri LIKE 'asset:///%' AND localUri IS NULL"
+            )
+            db.openHelper.writableDatabase.execSQL(
+                "DELETE FROM playlist_tracks WHERE trackId IN ('mango-dawn', 'mango-orbit', 'mango-dusk')"
+            )
+        } catch (_: Exception) {}
+    }
     suspend fun seed() { addAll(Catalog.samples) }
     suspend fun add(track: Track) { dao.insert(SavedTrack(track.id, track.title, track.artist, track.uri, track.durationMs, track.downloadable, thumbnailUrl = track.thumbnailUrl)) }
     suspend fun addAll(tracks: List<Track>) {

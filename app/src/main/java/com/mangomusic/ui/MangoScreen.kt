@@ -9,6 +9,7 @@ import androidx.compose.animation.core.withInfiniteAnimationFrameNanos
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
@@ -16,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -682,6 +684,8 @@ private fun LibraryScreen(
     onOpenDownloads: () -> Unit = {}
 ) {
     var selectedCategory by rememberSaveable { mutableStateOf("All Music") }
+    val trendingTracks by vm.trendingTracks.collectAsStateWithLifecycle()
+    val isTrendingLoading by vm.trendingLoading.collectAsStateWithLifecycle()
     LaunchedEffect(selectedCategory) {
         vm.loadTrending(selectedCategory)
     }
@@ -763,7 +767,7 @@ private fun LibraryScreen(
 
         // Discover Home Experience when query is blank on Search/Home
         if (destination == "Search" && !isSearching) {
-            // 2. Music Category Chips
+            // 1. Music Category Chips
             item(key = "discover-categories") {
                 CategoryChipsRow(
                     categories = DiscoverCatalog.categories,
@@ -772,7 +776,50 @@ private fun LibraryScreen(
                 )
             }
 
-            // Explore Music: Search Online & My Library + Online Mix
+            // 2. Trending Songs (Immediately below Category Chips)
+            item(key = "discover-trending") {
+                SectionHeader(
+                    title = "Trending Songs",
+                    subtitle = "Currently trending music",
+                    actionLabel = if (trendingTracks.isNotEmpty()) "Play all" else null,
+                    topPadding = 20.dp,
+                    bottomPadding = 12.dp,
+                    onActionClick = { if (trendingTracks.isNotEmpty()) vm.play(trendingTracks.first(), trendingTracks) }
+                )
+                if (isTrendingLoading && trendingTracks.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        LinearProgressIndicator(
+                            modifier = Modifier
+                                .fillMaxWidth(0.5f)
+                                .clip(RoundedCornerShape(4.dp)),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                } else if (trendingTracks.isNotEmpty()) {
+                    TrendingGridPager(
+                        tracks = trendingTracks,
+                        saved = saved,
+                        currentTrackId = playback.id,
+                        connected = playback.connected,
+                        offline = offline,
+                        onTrackClick = { track -> vm.play(track, trendingTracks) },
+                        onFavorite = { track -> vm.favorite(track) },
+                        onQueue = { track -> vm.enqueue(track) },
+                        onNext = { track -> vm.enqueue(track, true) },
+                        onDownload = { track -> vm.download(track) },
+                        onCancel = { track -> vm.cancelDownload(track) },
+                        onDelete = { track -> vm.deleteDownload(track) },
+                        onAddToPlaylist = { track -> onAddToPlaylist(track) }
+                    )
+                }
+            }
+
+            // 3. Get Started (Explore Music: Online Mix, Search Online & My Library)
             item(key = "discover-explore-music") {
                 ExploreMusicSection(
                     onOpenSearchOnline = {
@@ -787,13 +834,13 @@ private fun LibraryScreen(
                 )
             }
 
-            // 3. Featured Artists
+            // 4. Featured Artists
             item(key = "discover-artists") {
                 val filteredArtists = remember(selectedCategory) {
                     if (selectedCategory == "All Music") DiscoverCatalog.featuredArtists
                     else DiscoverCatalog.featuredArtists.filter { it.category == selectedCategory || it.category == "All Music" }
                 }
-                SectionHeader(title = "Featured Artists", topPadding = 20.dp, bottomPadding = 12.dp)
+                SectionHeader(title = "Featured Artists", topPadding = 24.dp, bottomPadding = 12.dp)
                 FeaturedArtistsRow(
                     artists = filteredArtists,
                     offline = offline,
@@ -801,18 +848,18 @@ private fun LibraryScreen(
                 )
             }
 
-            // 4. Browse by Mood
+            // 5. Browse by Mood
             item(key = "discover-moods") {
                 SectionHeader(title = "Browse by Mood", topPadding = 24.dp, bottomPadding = 12.dp)
                 BrowseByMoodRow(onMoodClick = onSelectMood)
             }
 
-            // 5. Popular Picks (Trending Now)
+            // 6. Popular Picks (Quick Picks - prioritizing genuine artwork)
             item(key = "discover-popular") {
-                val popularTracks = remember(all, selectedCategory) {
-                    val availableTracks = all.filter { vm.available(it) }
-                    if (selectedCategory == "All Music") availableTracks
-                    else availableTracks.filter { it.artist.contains(selectedCategory, ignoreCase = true) || it.title.contains(selectedCategory, ignoreCase = true) }.ifEmpty { availableTracks }
+                val popularTracks = remember(all, trendingTracks, selectedCategory) {
+                    val pool = (trendingTracks + all.filter { vm.available(it) }).distinctBy { it.id }
+                    if (selectedCategory == "All Music") pool
+                    else pool.filter { it.artist.contains(selectedCategory, ignoreCase = true) || it.title.contains(selectedCategory, ignoreCase = true) }.ifEmpty { pool }
                 }
                 SectionHeader(
                     title = "Popular Picks",
@@ -832,12 +879,13 @@ private fun LibraryScreen(
                 )
             }
 
-            // 5. Medley Section
+            // 7. Medley / Collections (Artwork-based cards)
             item(key = "discover-medley") {
                 val downloaded = remember(saved) {
                     saved.filter { it.localUri != null || it.uri.startsWith("asset:") }.map { it.track() }
                 }
-                val medleyCards = remember(downloaded.size) {
+                val downloadedArt = downloaded.firstOrNull { it.thumbnailUrl != null }?.thumbnailUrl
+                val medleyCards = remember(downloaded.size, downloadedArt) {
                     listOf(
                         CuratedMix(
                             id = "medley-offline",
@@ -845,7 +893,9 @@ private fun LibraryScreen(
                             subtitle = if (downloaded.isNotEmpty()) "${downloaded.size} tracks saved offline" else "Browse downloaded audio",
                             gradientColors = listOf(Color(0xFF004D40), Color(0xFF00796B)),
                             onPlay = { onOpenDownloads() },
-                            icon = Icons.Outlined.DownloadDone
+                            icon = Icons.Outlined.DownloadDone,
+                            artworkUrl = downloadedArt,
+                            artworkResId = if (downloadedArt == null) R.drawable.mix_chill else null
                         ),
                         CuratedMix(
                             id = "col-new-releases",
@@ -856,7 +906,8 @@ private fun LibraryScreen(
                                 val col = DiscoverCatalog.medleyCollections.first { it.id == "col-new-releases" }
                                 onSelectCollection(col)
                             },
-                            icon = Icons.Outlined.NewReleases
+                            icon = Icons.Outlined.NewReleases,
+                            artworkResId = R.drawable.mix_trending
                         ),
                         CuratedMix(
                             id = "col-classic-bollywood",
@@ -867,7 +918,8 @@ private fun LibraryScreen(
                                 val col = DiscoverCatalog.medleyCollections.first { it.id == "col-classic-bollywood" }
                                 onSelectCollection(col)
                             },
-                            icon = Icons.Outlined.Radio
+                            icon = Icons.Outlined.Radio,
+                            artworkResId = R.drawable.mix_hindi
                         ),
                         CuratedMix(
                             id = "col-popular-songs",
@@ -878,70 +930,13 @@ private fun LibraryScreen(
                                 val col = DiscoverCatalog.medleyCollections.first { it.id == "col-popular-songs" }
                                 onSelectCollection(col)
                             },
-                            icon = Icons.Outlined.TrendingUp
+                            icon = Icons.Outlined.TrendingUp,
+                            artworkResId = R.drawable.mix_punjabi
                         )
                     )
                 }
                 SectionHeader(title = "Medley", topPadding = 24.dp, bottomPadding = 12.dp)
                 MadeForYouRow(mixes = medleyCards)
-            }
-
-            // 6. Trending Songs (Replaces Recently Played)
-            item(key = "discover-trending") {
-                val trendingTracks by vm.trendingTracks.collectAsStateWithLifecycle()
-                val isTrendingLoading by vm.trendingLoading.collectAsStateWithLifecycle()
-                SectionHeader(
-                    title = "Trending Songs",
-                    subtitle = "Currently trending music",
-                    actionLabel = if (trendingTracks.isNotEmpty()) "Play all" else null,
-                    topPadding = 24.dp,
-                    bottomPadding = 12.dp,
-                    onActionClick = { if (trendingTracks.isNotEmpty()) vm.play(trendingTracks.first(), trendingTracks) }
-                )
-                if (isTrendingLoading && trendingTracks.isEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        LinearProgressIndicator(
-                            modifier = Modifier
-                                .fillMaxWidth(0.5f)
-                                .clip(RoundedCornerShape(4.dp)),
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                } else if (trendingTracks.isNotEmpty()) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        trendingTracks.take(8).forEach { track ->
-                            val stored = saved.find { it.id == track.id }
-                            TrackRow(
-                                track = track,
-                                saved = stored,
-                                selected = playback.id == track.id,
-                                queued = false,
-                                showHistory = false,
-                                connected = playback.connected,
-                                offline = offline,
-                                onPlay = { vm.play(track, trendingTracks) },
-                                onFavorite = { vm.favorite(track) },
-                                onQueue = { vm.enqueue(track) },
-                                onNext = { vm.enqueue(track, true) },
-                                onRemove = {},
-                                onDownload = { vm.download(track) },
-                                onCancel = { vm.cancelDownload(track) },
-                                onDelete = { vm.deleteDownload(track) },
-                                onAddToPlaylist = { onAddToPlaylist(track) }
-                            )
-                        }
-                    }
-                }
             }
 
             // Section header for complete library listing
@@ -1166,7 +1161,7 @@ private fun NowPlaying(
                 IconButton(onClick = queue) { Icon(Icons.AutoMirrored.Outlined.QueueMusic, "Open Up Next") }
             }
             if (compact) Spacer(Modifier.height(16.dp)) else Spacer(Modifier.weight(1f))
-            Vinyl(angle, Modifier.size(if (compact) 200.dp else 268.dp))
+            Vinyl(angle, Modifier.size(if (compact) 200.dp else 268.dp), track?.thumbnailUrl)
             if (compact) Spacer(Modifier.height(24.dp)) else Spacer(Modifier.weight(1f))
             Text(track?.title ?: "Nothing playing", Modifier.fillMaxWidth(), fontSize = 22.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Spacer(Modifier.height(6.dp))
@@ -1226,7 +1221,7 @@ private fun ModeButton(icon: ImageVector, label: String, active: Boolean, action
 }
 
 @Composable
-internal fun Vinyl(angle: MutableFloatState, modifier: Modifier) {
+internal fun Vinyl(angle: MutableFloatState, modifier: Modifier, artworkUrl: String? = null) {
     BoxWithConstraints(modifier.semantics { contentDescription = "Mango Music vinyl disc" }.graphicsLayer { rotationZ = angle.floatValue }, contentAlignment = Alignment.Center) {
         val small = maxWidth < 250.dp
         Canvas(Modifier.fillMaxSize()) {
@@ -1238,8 +1233,43 @@ internal fun Vinyl(angle: MutableFloatState, modifier: Modifier) {
             drawCircle(Color(0xFF242427), radius * .34f)
             drawCircle(Color(0xFF09090B), radius * .035f)
         }
-        // Center the original asset on the same pivot as the rotating disc at every size.
-        Image(painterResource(R.drawable.mango_logo), null, Modifier.align(Alignment.Center).size(if (small) 32.dp else 40.dp).testTag("vinyl-logo").clip(RoundedCornerShape(if (small) 8.dp else 10.dp)))
+        val centerDiameter = if (small) 68.dp else 90.dp
+        Box(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .size(centerDiameter)
+                .clip(CircleShape)
+                .background(Color(0xFF242427))
+                .border(1.dp, Color(0xFF3A3A40), CircleShape)
+                .testTag("vinyl-logo"),
+            contentAlignment = Alignment.Center
+        ) {
+            if (!artworkUrl.isNullOrBlank()) {
+                coil.compose.AsyncImage(
+                    model = coil.request.ImageRequest.Builder(LocalContext.current)
+                        .data(artworkUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "Current track artwork",
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize().clip(CircleShape)
+                )
+            } else {
+                Image(
+                    painterResource(R.drawable.mango_logo),
+                    null,
+                    Modifier.size(if (small) 32.dp else 40.dp).clip(RoundedCornerShape(if (small) 8.dp else 10.dp))
+                )
+            }
+            // Center spindle hole
+            Box(
+                modifier = Modifier
+                    .size(if (small) 10.dp else 14.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF09090B))
+                    .border(1.dp, Color(0xFF4A4A52), CircleShape)
+            )
+        }
     }
 }
 

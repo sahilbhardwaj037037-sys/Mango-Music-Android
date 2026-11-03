@@ -41,7 +41,7 @@ class PlaybackTest {
     private fun item(track: Track) = MediaItem.Builder().setMediaId(track.id).setUri(track.uri)
         .setMediaMetadata(MediaMetadata.Builder().setTitle(track.title).setArtist(track.artist).build()).build()
     @Test fun assetPlaybackPauseSeekBackgroundAndModes() = withPlayer { scenario, player ->
-        main { player.setMediaItems(Catalog.samples.map(::item)); player.prepare(); player.play() }
+        main { player.setMediaItems(Catalog.testFixtures.map(::item)); player.prepare(); player.play() }
         await("Bundled audio did not start") { player.isPlaying && player.currentPosition > 400 }
         var pausedPosition = 0L
         main { player.pause(); pausedPosition = player.currentPosition }
@@ -68,7 +68,7 @@ class PlaybackTest {
         await("Previous did not return") { player.currentMediaItemIndex == 0 }
         runBlocking {
             val dao = (context.applicationContext as MangoApp).repository.dao
-            assertTrue("History not recorded", (dao.get(Catalog.samples[1].id)?.playCount ?: 0) > 0)
+            assertTrue("History not recorded", (dao.get(Catalog.testFixtures[1].id)?.playCount ?: 0) > 0)
         }
         main { player.stop() }
         main { assertFalse(player.isPlaying) }
@@ -78,7 +78,7 @@ class PlaybackTest {
         val request = android.media.AudioFocusRequest.Builder(android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
             .setAudioAttributes(android.media.AudioAttributes.Builder().setUsage(android.media.AudioAttributes.USAGE_MEDIA).build())
             .setOnAudioFocusChangeListener({ }, android.os.Handler(android.os.Looper.getMainLooper())).build()
-        main { player.setMediaItem(item(Catalog.samples[0])); player.prepare(); player.play() }
+        main { player.setMediaItem(item(Catalog.testFixtures[0])); player.prepare(); player.play() }
         await("Audio did not start before focus test") { player.isPlaying }
         try {
             main { assertEquals(android.media.AudioManager.AUDIOFOCUS_REQUEST_GRANTED, audio.requestAudioFocus(request)) }

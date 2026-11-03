@@ -99,7 +99,7 @@ class MusicViewModel(application: Application): AndroidViewModel(application) {
         }
     }
     init {
-        launch { repository.seed() }
+        launch { repository.cleanupDemoTracks() }
         viewModelScope.launch(Dispatchers.IO) {
             updater.checkForUpdates(isManual = false)
         }

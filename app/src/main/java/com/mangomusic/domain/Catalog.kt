@@ -5,7 +5,8 @@ import java.util.Locale
 data class Track(val id: String, val title: String, val artist: String, val uri: String, val durationMs: Long = 0, val downloadable: Boolean = false, val thumbnailUrl: String? = null)
 
 object Catalog {
-    val samples = listOf(
+    val samples: List<Track> = emptyList()
+    val testFixtures: List<Track> = listOf(
         Track("mango-dawn", "Mango Dawn", "Mango Studio · original demo", "asset:///mango_dawn.wav", 24000),
         Track("mango-orbit", "Pink Orbit", "Mango Studio · original demo", "asset:///pink_orbit.wav", 24000),
         Track("mango-dusk", "After the Rain", "Mango Studio · original demo", "asset:///after_rain.wav", 24000)

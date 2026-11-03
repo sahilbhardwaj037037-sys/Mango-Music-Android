@@ -6,12 +6,12 @@ import org.junit.Test
 
 class DomainTest {
     @Test fun searchHandlesWhitespaceCaseAndDuplicates() {
-        assertEquals(listOf(Catalog.samples.first()), Catalog.search(Catalog.samples + Catalog.samples.first(), "  MANGO DAWN  "))
-        assertEquals(3, Catalog.search(Catalog.samples, "studio").size)
-        assertTrue(Catalog.search(Catalog.samples, "missing").isEmpty())
+        assertEquals(listOf(Catalog.testFixtures.first()), Catalog.search(Catalog.testFixtures + Catalog.testFixtures.first(), "  MANGO DAWN  "))
+        assertEquals(3, Catalog.search(Catalog.testFixtures, "studio").size)
+        assertTrue(Catalog.search(Catalog.testFixtures, "missing").isEmpty())
     }
-    @Test(expected = IllegalArgumentException::class) fun searchRejectsControlCharacters() { Catalog.search(Catalog.samples, "bad\nquery") }
-    @Test(expected = IllegalArgumentException::class) fun searchBoundsQuery() { Catalog.search(Catalog.samples, "x".repeat(201)) }
+    @Test(expected = IllegalArgumentException::class) fun searchRejectsControlCharacters() { Catalog.search(Catalog.testFixtures, "bad\nquery") }
+    @Test(expected = IllegalArgumentException::class) fun searchBoundsQuery() { Catalog.search(Catalog.testFixtures, "x".repeat(201)) }
     @Test fun pauseFreezesAndResumeKeepsDiscAngle() {
         val moving = DiscMotion.advance(123f, 16f, true)
         assertTrue(moving > 123f)

@@ -69,13 +69,13 @@ class MixPlaybackTest {
                 main {
                     assertEquals(seed.id,player.currentMediaItem?.mediaId)
                     assertTrue(MixQueue.automatic(player.getMediaItemAt(1)))
-                    model.enqueue(Catalog.samples[1])
+                    model.enqueue(Catalog.testFixtures[1])
                 }
-                await("Manual queue item was not inserted before Mix") { player.getMediaItemAt(1).mediaId==Catalog.samples[1].id }
+                await("Manual queue item was not inserted before Mix") { player.getMediaItemAt(1).mediaId==Catalog.testFixtures[1].id }
                 main { player.shuffleModeEnabled=true }
-                await("Shuffled Next ignored manual priority") { player.nextMediaItemIndex>=0 && player.getMediaItemAt(player.nextMediaItemIndex).mediaId==Catalog.samples[1].id }
+                await("Shuffled Next ignored manual priority") { player.nextMediaItemIndex>=0 && player.getMediaItemAt(player.nextMediaItemIndex).mediaId==Catalog.testFixtures[1].id }
                 main { player.seekToNextMediaItem() }
-                await("Manual song did not play") { player.currentMediaItem?.mediaId==Catalog.samples[1].id && player.isPlaying }
+                await("Manual song did not play") { player.currentMediaItem?.mediaId==Catalog.testFixtures[1].id && player.isPlaying }
                 // Keep the ordinary player/session alive while its Activity is stopped.
                 scenario.moveToState(Lifecycle.State.CREATED)
                 main { player.seekTo(23500) }

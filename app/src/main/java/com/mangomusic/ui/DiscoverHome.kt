@@ -8,6 +8,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -44,6 +46,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -75,7 +78,9 @@ data class CuratedMix(
     val subtitle: String,
     val gradientColors: List<Color>,
     val onPlay: () -> Unit,
-    val icon: androidx.compose.ui.graphics.vector.ImageVector? = null
+    val icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
+    val artworkResId: Int? = null,
+    val artworkUrl: String? = null
 )
 
 data class MedleyCollection(
@@ -102,20 +107,21 @@ data class MoodItem(
     val id: String,
     val name: String,
     val gradientColors: List<Color>,
-    val icon: androidx.compose.ui.graphics.vector.ImageVector
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
+    val artworkResId: Int? = null
 )
 
 object DiscoverCatalog {
     val categories = listOf("All Music", "Punjabi", "Hindi", "English", "Regional")
 
     val moods = listOf(
-        MoodItem("mood-chill", "Chill", listOf(Color(0xFF004D40), Color(0xFF00695C)), Icons.Outlined.Spa),
-        MoodItem("mood-romantic", "Romantic", listOf(Color(0xFF880E4F), Color(0xFFAD1457)), Icons.Outlined.FavoriteBorder),
-        MoodItem("mood-happy", "Happy", listOf(Color(0xFFE65100), Color(0xFFEF6C00)), Icons.Outlined.WbSunny),
-        MoodItem("mood-sad", "Sad", listOf(Color(0xFF1A237E), Color(0xFF283593)), Icons.Outlined.WaterDrop),
-        MoodItem("mood-workout", "Workout", listOf(Color(0xFFB71C1C), Color(0xFFC62828)), Icons.Outlined.FitnessCenter),
-        MoodItem("mood-focus", "Focus", listOf(Color(0xFF1B5E20), Color(0xFF2E7D32)), Icons.Outlined.SelfImprovement),
-        MoodItem("mood-funk", "Funk", listOf(Color(0xFF6A1B9A), Color(0xFF8E24AA)), Icons.Outlined.GraphicEq)
+        MoodItem("mood-chill", "Chill", listOf(Color(0xFF004D40), Color(0xFF00695C)), Icons.Outlined.Spa, R.drawable.mix_chill),
+        MoodItem("mood-romantic", "Romantic", listOf(Color(0xFF880E4F), Color(0xFFAD1457)), Icons.Outlined.FavoriteBorder, R.drawable.mix_romantic),
+        MoodItem("mood-happy", "Happy", listOf(Color(0xFFE65100), Color(0xFFEF6C00)), Icons.Outlined.WbSunny, R.drawable.mix_punjabi),
+        MoodItem("mood-sad", "Sad", listOf(Color(0xFF1A237E), Color(0xFF283593)), Icons.Outlined.WaterDrop, R.drawable.mix_hindi),
+        MoodItem("mood-workout", "Workout", listOf(Color(0xFFB71C1C), Color(0xFFC62828)), Icons.Outlined.FitnessCenter, R.drawable.mix_trending),
+        MoodItem("mood-focus", "Focus", listOf(Color(0xFF1B5E20), Color(0xFF2E7D32)), Icons.Outlined.SelfImprovement, R.drawable.mix_chill),
+        MoodItem("mood-funk", "Funk", listOf(Color(0xFF6A1B9A), Color(0xFF8E24AA)), Icons.Outlined.GraphicEq, R.drawable.mix_english)
     )
 
     val moodQueries: Map<String, List<String>> = mapOf(
@@ -348,6 +354,36 @@ object DiscoverCatalog {
     }
 }
 
+// Discover Home YouTube Music-inspired visual styling tokens (strictly local to DiscoverHome)
+private val isHomeDark: Boolean
+    @Composable get() = MaterialTheme.colorScheme.background == MangoDarkColors.background
+
+private val HomeSurfaceCard: Color
+    @Composable get() = if (isHomeDark) Color(0xFF19191C) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+
+private val HomeSurfaceElevated: Color
+    @Composable get() = if (isHomeDark) Color(0xFF222226) else MaterialTheme.colorScheme.surfaceContainerHigh
+
+private val HomeChipBg: Color
+    @Composable get() = if (isHomeDark) Color(0xFF212124) else Color(0xFFECECEF)
+
+private val HomeChipSelected: Color
+    @Composable get() = if (isHomeDark) Color(0xFFF5F5F7) else Color(0xFF1D1D20)
+
+private val HomeChipSelectedText: Color
+    @Composable get() = if (isHomeDark) Color(0xFF121214) else Color(0xFFFFFFFF)
+
+private val HomeTextPrimary: Color
+    @Composable get() = MaterialTheme.colorScheme.onBackground
+
+private val HomeTextMuted: Color
+    @Composable get() = MaterialTheme.colorScheme.onSurfaceVariant
+
+private val HomeBorderSubtle: Color
+    @Composable get() = if (isHomeDark) Color(0xFF2E2E33) else Color(0xFFE2E2E8)
+
+private val HomeGold: Color = Color(0xFFE5B842)
+
 @Composable
 fun SectionHeader(
     title: String,
@@ -368,27 +404,36 @@ fun SectionHeader(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
+                fontSize = 19.sp,
+                letterSpacing = (-0.3).sp,
+                color = HomeTextPrimary
             )
             if (subtitle != null) {
                 Spacer(Modifier.height(2.dp))
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    fontSize = 12.sp,
+                    color = HomeTextMuted
                 )
             }
         }
         if (actionLabel != null) {
-            Text(
-                text = actionLabel,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .clickable(onClick = onActionClick)
-                    .padding(vertical = 4.dp, horizontal = 4.dp)
-            )
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = HomeChipBg,
+                border = BorderStroke(0.5.dp, HomeBorderSubtle),
+                onClick = onActionClick
+            ) {
+                Text(
+                    text = actionLabel,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 12.sp,
+                    color = HomeTextPrimary,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp)
+                )
+            }
         }
     }
 }
@@ -405,29 +450,20 @@ fun CategoryChipsRow(
     ) {
         items(categories) { category ->
             val isSelected = category == selectedCategory
-            FilterChip(
-                selected = isSelected,
-                onClick = { onSelectCategory(category) },
-                label = {
-                    Text(
-                        category,
-                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                },
-                shape = RoundedCornerShape(20.dp),
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                    selectedLabelColor = MaterialTheme.colorScheme.primary,
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant
-                ),
-                border = FilterChipDefaults.filterChipBorder(
-                    enabled = true,
-                    selected = isSelected,
-                    borderColor = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.4f) else Color.Transparent
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = if (isSelected) HomeChipSelected else HomeChipBg,
+                border = BorderStroke(0.5.dp, if (isSelected) Color.Transparent else HomeBorderSubtle),
+                onClick = { onSelectCategory(category) }
+            ) {
+                Text(
+                    text = category,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                    fontSize = 13.sp,
+                    color = if (isSelected) HomeChipSelectedText else HomeTextPrimary,
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)
                 )
-            )
+            }
         }
     }
 }
@@ -440,32 +476,56 @@ fun FeaturedArtistsRow(
 ) {
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(14.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         items(artists, key = { it.id }) { artist ->
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = HomeSurfaceCard,
+                border = BorderStroke(0.5.dp, HomeBorderSubtle),
                 modifier = Modifier
-                    .width(68.dp)
+                    .width(124.dp)
+                    .height(176.dp)
+                    .clip(RoundedCornerShape(14.dp))
                     .clickable { onArtistClick(artist) }
             ) {
-                ArtistPortraitCircle(
-                    artist = artist,
-                    offline = offline
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 8.dp, vertical = 10.dp)
+                ) {
+                    ArtistPortraitCircle(
+                        artist = artist,
+                        offline = offline,
+                        size = 88.dp
+                    )
 
-                Spacer(Modifier.height(5.dp))
+                    Spacer(Modifier.height(10.dp))
 
-                Text(
-                    text = artist.name,
-                    style = MaterialTheme.typography.bodySmall,
-                    fontSize = 11.5.sp,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+                    Text(
+                        text = artist.name,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        textAlign = TextAlign.Center,
+                        color = HomeTextPrimary
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = "${artist.category} • Artist",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 10.5.sp,
+                        color = HomeTextMuted,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
         }
     }
@@ -474,13 +534,14 @@ fun FeaturedArtistsRow(
 @Composable
 private fun ArtistPortraitCircle(
     artist: FeaturedArtist,
-    offline: Boolean
+    offline: Boolean,
+    size: Dp = 80.dp
 ) {
     val shouldLoad = artist.imageUrl != null && !offline
 
     Box(
         modifier = Modifier
-            .size(64.dp)
+            .size(size)
             .clip(CircleShape)
             .background(
                 Brush.sweepGradient(
@@ -493,7 +554,7 @@ private fun ArtistPortraitCircle(
             )
             .border(
                 width = 1.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                color = HomeBorderSubtle,
                 shape = CircleShape
             ),
         contentAlignment = Alignment.Center
@@ -558,12 +619,19 @@ fun BrowseByMoodRow(
     moods: List<MoodItem> = DiscoverCatalog.moods,
     onMoodClick: (MoodItem) -> Unit = {}
 ) {
+    val pairedMoods = remember(moods) { moods.chunked(2) }
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        items(moods, key = { it.id }) { mood ->
-            MoodCard(mood = mood, onClick = { onMoodClick(mood) })
+        items(pairedMoods) { pair ->
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                pair.forEach { mood ->
+                    MoodCard(mood = mood, onClick = { onMoodClick(mood) })
+                }
+            }
         }
     }
 }
@@ -575,10 +643,11 @@ fun MoodCard(
 ) {
     Surface(
         shape = RoundedCornerShape(12.dp),
-        color = Color.Transparent,
+        color = HomeSurfaceCard,
+        border = BorderStroke(0.5.dp, HomeBorderSubtle),
         modifier = Modifier
-            .width(112.dp)
-            .height(54.dp)
+            .width(160.dp)
+            .height(58.dp)
             .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
     ) {
@@ -588,39 +657,322 @@ fun MoodCard(
                 .background(
                     Brush.horizontalGradient(
                         colors = listOf(
-                            mood.gradientColors[0].copy(alpha = 0.88f),
-                            mood.gradientColors[1].copy(alpha = 0.72f)
+                            mood.gradientColors[0].copy(alpha = 0.30f),
+                            Color(0xFF141417).copy(alpha = 0.90f)
                         )
                     )
                 )
-                .border(
-                    width = 0.5.dp,
-                    color = Color.White.copy(alpha = 0.15f),
-                    shape = RoundedCornerShape(12.dp)
-                )
-                .padding(horizontal = 10.dp, vertical = 8.dp),
+                .padding(horizontal = 8.dp, vertical = 6.dp),
             contentAlignment = Alignment.CenterStart
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(
-                    imageVector = mood.icon,
-                    contentDescription = null,
-                    tint = Color.White.copy(alpha = 0.9f),
-                    modifier = Modifier.size(18.dp)
-                )
+                // Genuine artwork thumbnail
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Brush.linearGradient(mood.gradientColors)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (mood.artworkResId != null) {
+                        Image(
+                            painter = androidx.compose.ui.res.painterResource(mood.artworkResId),
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Icon(
+                            imageVector = mood.icon,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = mood.name,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp,
+                        color = HomeTextPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(Modifier.height(1.dp))
+                    Text(
+                        text = DiscoverCatalog.moodSubtitle(mood.id),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 9.5.sp,
+                        color = HomeTextMuted,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TrendingGridPager(
+    tracks: List<Track>,
+    saved: List<SavedTrack>,
+    currentTrackId: String?,
+    connected: Boolean,
+    offline: Boolean,
+    onTrackClick: (Track) -> Unit,
+    onFavorite: (Track) -> Unit,
+    onQueue: (Track) -> Unit,
+    onNext: (Track) -> Unit,
+    onDownload: (Track) -> Unit,
+    onCancel: (Track) -> Unit,
+    onDelete: (Track) -> Unit,
+    onAddToPlaylist: ((Track) -> Unit)? = null,
+    modifier: Modifier = Modifier
+) {
+    val displayTracks = remember(tracks) { tracks.take(8) }
+    val pages = remember(displayTracks) {
+        if (displayTracks.isEmpty()) emptyList()
+        else displayTracks.chunked(4)
+    }
+
+    if (pages.isEmpty()) return
+
+    val pagerState = rememberPagerState(pageCount = { pages.size })
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxWidth()
+        ) { pageIndex ->
+            val pageTracks = pages[pageIndex]
+            val rows = remember(pageTracks) { pageTracks.chunked(2) }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                rows.forEach { rowTracks ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        rowTracks.forEach { track ->
+                            val stored = saved.find { it.id == track.id }
+                            Box(modifier = Modifier.weight(1f)) {
+                                TrendingTrackGridCell(
+                                    track = track,
+                                    saved = stored,
+                                    selected = currentTrackId == track.id,
+                                    connected = connected,
+                                    offline = offline,
+                                    onClick = { onTrackClick(track) },
+                                    onFavorite = { onFavorite(track) },
+                                    onQueue = { onQueue(track) },
+                                    onNext = { onNext(track) },
+                                    onDownload = { onDownload(track) },
+                                    onCancel = { onCancel(track) },
+                                    onDelete = { onDelete(track) },
+                                    onAddToPlaylist = onAddToPlaylist?.let { { it(track) } }
+                                )
+                            }
+                        }
+                        if (rowTracks.size == 1) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
+                }
+            }
+        }
+
+        // Subtle Page Indicator (active pill, inactive dot)
+        if (pages.size > 1) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp, bottom = 4.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                repeat(pages.size) { index ->
+                    val isActive = pagerState.currentPage == index
+                    Box(
+                        modifier = Modifier
+                            .padding(horizontal = 3.dp)
+                            .size(width = if (isActive) 16.dp else 6.dp, height = 4.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (isActive) MaterialTheme.colorScheme.primary
+                                else HomeTextMuted.copy(alpha = 0.35f)
+                            )
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TrendingTrackGridCell(
+    track: Track,
+    saved: SavedTrack?,
+    selected: Boolean,
+    connected: Boolean,
+    offline: Boolean,
+    onClick: () -> Unit,
+    onFavorite: () -> Unit,
+    onQueue: () -> Unit,
+    onNext: () -> Unit,
+    onDownload: () -> Unit,
+    onCancel: () -> Unit,
+    onDelete: () -> Unit,
+    onAddToPlaylist: (() -> Unit)? = null
+) {
+    var menu by remember { mutableStateOf(false) }
+    var delete by remember { mutableStateOf(false) }
+
+    if (delete) {
+        AlertDialog(
+            onDismissRequest = { delete = false },
+            title = { Text("Remove saved audio?") },
+            text = { Text("This removes the downloaded copy of ${track.title}. Favorites and listening history are kept.") },
+            confirmButton = {
+                TextButton(onClick = { delete = false; onDelete() }) {
+                    Text("Remove download")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { delete = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    Surface(
+        shape = RoundedCornerShape(10.dp),
+        color = if (selected) HomeSurfaceElevated else HomeSurfaceCard,
+        border = BorderStroke(
+            width = 0.5.dp,
+            color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.6f) else HomeBorderSubtle
+        ),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(64.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .clickable(enabled = connected, onClick = onClick)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 8.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Track artwork thumbnail (48x48dp)
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Brush.linearGradient(DiscoverCatalog.trackGradient(track.id))),
+                contentAlignment = Alignment.Center
+            ) {
+                if (track.thumbnailUrl != null && (!offline || track.thumbnailUrl.startsWith("file:"))) {
+                    AsyncImage(
+                        model = track.thumbnailUrl,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .testTag("online-thumbnail"),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Image(
+                            painter = androidx.compose.ui.res.painterResource(R.drawable.mango_logo),
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp).clip(RoundedCornerShape(4.dp))
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.width(8.dp))
+
+            // Track title & artist
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center
+            ) {
                 Text(
-                    text = mood.name,
-                    style = MaterialTheme.typography.labelLarge,
+                    text = track.title,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 12.5.sp,
-                    color = Color.White,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    color = if (selected) MaterialTheme.colorScheme.primary else HomeTextPrimary
                 )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = track.artist,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontSize = 11.sp,
+                    color = HomeTextMuted
+                )
+            }
+
+            // Options menu button
+            Box {
+                IconButton(
+                    onClick = { menu = true },
+                    modifier = Modifier.size(28.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.MoreVert,
+                        contentDescription = "More for ${track.title}",
+                        modifier = Modifier.size(18.dp),
+                        tint = HomeTextMuted
+                    )
+                }
+                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                    DropdownMenuItem(text = { Text("Play next") }, onClick = { onNext(); menu = false })
+                    DropdownMenuItem(text = { Text("Add to Up Next") }, onClick = { onQueue(); menu = false })
+                    if (onAddToPlaylist != null) {
+                        DropdownMenuItem(
+                            text = { Text("Add to playlist") },
+                            onClick = { onAddToPlaylist(); menu = false },
+                            leadingIcon = { Icon(Icons.AutoMirrored.Outlined.PlaylistAdd, null) }
+                        )
+                    }
+                    DropdownMenuItem(
+                        text = { Text(if (saved?.favorite == true) "Remove favorite" else "Favorite") },
+                        onClick = { onFavorite(); menu = false },
+                        leadingIcon = { Icon(if (saved?.favorite == true) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, null) }
+                    )
+                    if (!offline && com.mangomusic.downloads.DownloadPolicy.eligible(track) && saved?.localUri == null && (saved?.downloadId ?: 0L) == 0L && saved?.downloadState !in com.mangomusic.downloads.DownloadPolicy.active) {
+                        DropdownMenuItem(
+                            text = { Text(if (saved?.downloadState in listOf("FAILED", "PAUSED", "CANCELLED", "MISSING")) "Retry download" else "Download") },
+                            onClick = { onDownload(); menu = false }
+                        )
+                    }
+                    if (saved?.downloadState in com.mangomusic.downloads.DownloadPolicy.active) {
+                        DropdownMenuItem(text = { Text("Cancel download") }, onClick = { onCancel(); menu = false })
+                    }
+                    if (saved?.localUri != null) {
+                        DropdownMenuItem(text = { Text("Remove download") }, onClick = { delete = true; menu = false })
+                    }
+                }
             }
         }
     }
@@ -636,23 +988,136 @@ fun PopularPicksRow(
     onTrackClick: (Track) -> Unit,
     onFavorite: (Track) -> Unit
 ) {
+    val columns = remember(tracks) {
+        if (tracks.size >= 4) tracks.chunked(4) else tracks.chunked(maxOf(1, tracks.size))
+    }
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        items(tracks, key = { it.id }) { track ->
-            val stored = saved.find { it.id == track.id }
-            val isFavorite = stored?.favorite == true
-            val isSelected = currentTrackId == track.id
-            PopularTrackCard(
-                track = track,
-                isFavorite = isFavorite,
-                isSelected = isSelected,
-                isPlaying = isPlaying && isSelected,
-                offline = offline,
-                onClick = { onTrackClick(track) },
-                onFavorite = { onFavorite(track) }
-            )
+        items(columns) { columnTracks ->
+            Column(
+                modifier = Modifier.width(310.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                columnTracks.forEach { track ->
+                    val stored = saved.find { it.id == track.id }
+                    val isFavorite = stored?.favorite == true
+                    val isSelected = currentTrackId == track.id
+                    QuickPickTrackRow(
+                        track = track,
+                        isFavorite = isFavorite,
+                        isSelected = isSelected,
+                        isPlaying = isPlaying && isSelected,
+                        offline = offline,
+                        onClick = { onTrackClick(track) },
+                        onFavorite = { onFavorite(track) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun QuickPickTrackRow(
+    track: Track,
+    isFavorite: Boolean,
+    isSelected: Boolean,
+    isPlaying: Boolean,
+    offline: Boolean,
+    onClick: () -> Unit,
+    onFavorite: () -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = if (isSelected) HomeSurfaceElevated else Color.Transparent,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp, vertical = 5.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Brush.linearGradient(DiscoverCatalog.trackGradient(track.id))),
+                contentAlignment = Alignment.Center
+            ) {
+                if (track.thumbnailUrl != null && (!offline || track.thumbnailUrl.startsWith("file:"))) {
+                    AsyncImage(
+                        model = track.thumbnailUrl,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Image(
+                            painter = androidx.compose.ui.res.painterResource(R.drawable.mango_logo),
+                            contentDescription = null,
+                            modifier = Modifier.size(36.dp).clip(RoundedCornerShape(8.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+                        if (isPlaying) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(Color.Black.copy(alpha = 0.45f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.GraphicEq,
+                                    contentDescription = null,
+                                    tint = HomeGold,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(Modifier.width(12.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = track.title,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (isSelected) HomeGold else HomeTextPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.height(3.dp))
+                Text(
+                    text = track.artist,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontSize = 12.sp,
+                    color = HomeTextMuted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            IconButton(
+                onClick = onFavorite,
+                modifier = Modifier.size(36.dp)
+            ) {
+                Icon(
+                    imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                    contentDescription = if (isFavorite) "Unfavorite ${track.title}" else "Favorite ${track.title}",
+                    tint = if (isFavorite) Color(0xFFFF5364) else HomeTextMuted,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
         }
     }
 }
@@ -669,13 +1134,14 @@ fun PopularTrackCard(
 ) {
     Column(
         modifier = Modifier
-            .width(124.dp)
+            .width(136.dp)
             .clickable(onClick = onClick)
     ) {
         Box(
             modifier = Modifier
-                .size(124.dp)
+                .size(136.dp)
                 .clip(RoundedCornerShape(10.dp))
+                .border(0.5.dp, HomeBorderSubtle, RoundedCornerShape(10.dp))
                 .background(
                     Brush.linearGradient(DiscoverCatalog.trackGradient(track.id))
                 )
@@ -712,40 +1178,49 @@ fun PopularTrackCard(
             }
 
             // Quick favorite action directly on the card
-            IconButton(
-                onClick = onFavorite,
+            Box(
                 modifier = Modifier
-                    .size(32.dp)
+                    .size(36.dp)
                     .align(Alignment.TopEnd)
+                    .background(
+                        Brush.radialGradient(
+                            listOf(Color.Black.copy(alpha = 0.5f), Color.Transparent)
+                        )
+                    )
             ) {
-                Icon(
-                    imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                    contentDescription = if (isFavorite) "Unfavorite ${track.title}" else "Favorite ${track.title}",
-                    tint = if (isFavorite) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.85f),
-                    modifier = Modifier.size(18.dp)
-                )
+                IconButton(
+                    onClick = onFavorite,
+                    modifier = Modifier.size(32.dp).align(Alignment.Center)
+                ) {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                        contentDescription = if (isFavorite) "Unfavorite ${track.title}" else "Favorite ${track.title}",
+                        tint = if (isFavorite) Color(0xFFFF5364) else Color.White.copy(alpha = 0.9f),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
             }
         }
 
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(7.dp))
 
         Text(
             text = track.title,
             style = MaterialTheme.typography.bodyMedium,
-            fontSize = 13.sp,
+            fontSize = 13.5.sp,
             fontWeight = FontWeight.SemiBold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground
+            color = if (isSelected) HomeGold else HomeTextPrimary
         )
 
-        Spacer(Modifier.height(1.dp))
+        Spacer(Modifier.height(2.dp))
 
         Text(
             text = track.artist,
             style = MaterialTheme.typography.bodySmall,
-            fontSize = 11.5.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontSize = 12.sp,
+            color = HomeTextMuted,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -758,52 +1233,159 @@ fun MadeForYouRow(
 ) {
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         items(mixes, key = { it.id }) { mix ->
+            val bgTint = remember(mix.id) {
+                when (mix.id) {
+                    "medley-offline" -> Color(0xFF0F2420)
+                    "col-new-releases" -> Color(0xFF121F33)
+                    "col-classic-bollywood" -> Color(0xFF261528)
+                    else -> Color(0xFF2B1710)
+                }
+            }
             Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                shape = RoundedCornerShape(16.dp),
+                color = HomeSurfaceCard,
+                border = BorderStroke(0.5.dp, HomeBorderSubtle),
                 modifier = Modifier
-                    .width(160.dp)
-                    .height(84.dp)
+                    .width(240.dp)
+                    .height(244.dp)
+                    .clip(RoundedCornerShape(16.dp))
                     .clickable(onClick = mix.onPlay)
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Brush.horizontalGradient(mix.gradientColors))
-                        .padding(10.dp)
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(
+                                    bgTint,
+                                    Color(0xFF141417)
+                                )
+                            )
+                        )
+                        .padding(14.dp)
                 ) {
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        Text(
-                            text = mix.title,
-                            style = MaterialTheme.typography.titleSmall,
-                            fontSize = 13.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Spacer(Modifier.height(2.dp))
-                        Text(
-                            text = mix.subtitle,
-                            style = MaterialTheme.typography.bodySmall,
-                            fontSize = 11.sp,
-                            color = Color.White.copy(alpha = 0.85f),
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        // Top Section: Large Cover Artwork Square (matching Screenshot 1)
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(120.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Brush.linearGradient(mix.gradientColors)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (mix.artworkUrl != null) {
+                                AsyncImage(
+                                    model = mix.artworkUrl,
+                                    contentDescription = null,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else if (mix.artworkResId != null) {
+                                Image(
+                                    painter = androidx.compose.ui.res.painterResource(mix.artworkResId),
+                                    contentDescription = null,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = mix.icon ?: Icons.Filled.PlayArrow,
+                                    contentDescription = null,
+                                    tint = Color.White.copy(alpha = 0.9f),
+                                    modifier = Modifier.size(48.dp)
+                                )
+                            }
+                        }
 
-                    Icon(
-                        imageVector = mix.icon ?: Icons.Filled.PlayArrow,
-                        contentDescription = "Open ${mix.title}",
-                        tint = Color.White.copy(alpha = 0.9f),
-                        modifier = Modifier
-                            .size(20.dp)
-                            .align(Alignment.BottomEnd)
-                    )
+                        // Middle Section: Title, Subtitle and Round Play Button
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = mix.title,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Spacer(Modifier.height(2.dp))
+                                Text(
+                                    text = mix.subtitle,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontSize = 11.5.sp,
+                                    color = Color.White.copy(alpha = 0.72f),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .size(38.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.95f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.PlayArrow,
+                                    contentDescription = "Play ${mix.title}",
+                                    tint = Color(0xFF141416),
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                        }
+
+                        // Bottom Section: Highlight Badge Row
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = HomeChipBg,
+                            border = BorderStroke(0.5.dp, HomeBorderSubtle),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = when (mix.id) {
+                                        "medley-offline" -> "Downloaded tracks ready offline"
+                                        "col-new-releases" -> "Latest 2026 singles & releases"
+                                        "col-classic-bollywood" -> "Evergreen retro classics & hits"
+                                        else -> "Top global chartbusters"
+                                    },
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = HomeTextMuted,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f)
+                                )
+
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
+                                    contentDescription = null,
+                                    tint = HomeGold,
+                                    modifier = Modifier.size(13.dp)
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -863,7 +1445,7 @@ fun RecentlyPlayedTrackRow(
 
     Surface(
         shape = RoundedCornerShape(10.dp),
-        color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.08f) else Color.Transparent,
+        color = if (isSelected) HomeSurfaceElevated else Color.Transparent,
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onPlay)
@@ -878,6 +1460,7 @@ fun RecentlyPlayedTrackRow(
                 modifier = Modifier
                     .size(48.dp)
                     .clip(RoundedCornerShape(8.dp))
+                    .border(0.5.dp, HomeBorderSubtle, RoundedCornerShape(8.dp))
                     .background(Brush.linearGradient(DiscoverCatalog.trackGradient(track.id))),
                 contentAlignment = Alignment.Center
             ) {
@@ -914,7 +1497,7 @@ fun RecentlyPlayedTrackRow(
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                    color = if (isSelected) HomeGold else HomeTextPrimary
                 )
                 Spacer(Modifier.height(2.dp))
                 val subtitle = if (stored != null && stored.playCount > 0) {
@@ -925,7 +1508,7 @@ fun RecentlyPlayedTrackRow(
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = HomeTextMuted,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -936,7 +1519,7 @@ fun RecentlyPlayedTrackRow(
                 Icon(
                     imageVector = if (isFav) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                     contentDescription = if (isFav) "Unfavorite ${track.title}" else "Favorite ${track.title}",
-                    tint = if (isFav) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    tint = if (isFav) Color(0xFFFF5364) else HomeTextMuted,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -950,7 +1533,7 @@ fun RecentlyPlayedTrackRow(
                         Icon(
                             imageVector = Icons.Outlined.MoreVert,
                             contentDescription = "More options for ${track.title}",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            tint = HomeTextMuted,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -981,50 +1564,174 @@ fun ExploreMusicSection(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+        modifier = modifier.fillMaxWidth()
     ) {
         SectionHeader(
-            title = "Explore Music",
-            subtitle = null,
+            title = "Get Started",
+            subtitle = "Explore channels & audio collections",
             topPadding = 20.dp,
             bottomPadding = 12.dp
         )
 
-        // Top Row: 2 equal-sized compact cards side by side
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            ExploreCompactCard(
-                title = "Search Online",
-                subtitle = "Stream & discover",
-                icon = Icons.Outlined.TravelExplore,
-                accentColor = Color(0xFFE5B842),
-                onClick = onOpenSearchOnline,
-                modifier = Modifier.weight(1f)
-            )
+            item {
+                ExploreCard(
+                    title = "Online Mix",
+                    subtitle = "6 curated mixes & chart hits",
+                    badge = "6 MIXES",
+                    icon = Icons.Outlined.GraphicEq,
+                    accentColor = HomeGold,
+                    artworkResId = R.drawable.mix_punjabi,
+                    onClick = onOpenOnlineMix
+                )
+            }
 
-            ExploreCompactCard(
-                title = "My Library",
-                subtitle = "Saved & audio files",
-                icon = Icons.Outlined.LibraryMusic,
-                accentColor = Color(0xFFE5B842),
-                onClick = onOpenMyLibrary,
-                modifier = Modifier.weight(1f)
-            )
+            item {
+                ExploreCard(
+                    title = "Search Online",
+                    subtitle = "Stream millions on YouTube",
+                    badge = "ONLINE",
+                    icon = Icons.Outlined.TravelExplore,
+                    accentColor = Color(0xFF2E7D32),
+                    artworkResId = R.drawable.mix_trending,
+                    onClick = onOpenSearchOnline
+                )
+            }
+
+            item {
+                ExploreCard(
+                    title = "My Library",
+                    subtitle = "Saved & downloaded music",
+                    badge = "OFFLINE",
+                    icon = Icons.Outlined.LibraryMusic,
+                    accentColor = Color(0xFF1976D2),
+                    artworkResId = R.drawable.mix_chill,
+                    onClick = onOpenMyLibrary
+                )
+            }
         }
+    }
+}
 
-        Spacer(Modifier.height(10.dp))
+@Composable
+fun ExploreCard(
+    title: String,
+    subtitle: String,
+    badge: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    accentColor: Color,
+    artworkResId: Int,
+    onClick: () -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = HomeSurfaceCard,
+        border = BorderStroke(0.5.dp, HomeBorderSubtle),
+        modifier = Modifier
+            .width(160.dp)
+            .height(180.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick)
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Upper visual area with genuine artwork thumbnail
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(104.dp)
+            ) {
+                Image(
+                    painter = androidx.compose.ui.res.painterResource(artworkResId),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+                // Gradient scrim at bottom and dark tint for contrast
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(
+                                    Color.Black.copy(alpha = 0.25f),
+                                    Color.Black.copy(alpha = 0.65f),
+                                    Color(0xFF141417)
+                                )
+                            )
+                        )
+                )
 
-        // Bottom Row: One full-width Online Mix card
-        OnlineMixCard(
-            title = "Online Mix",
-            subtitle = "Curated hits, chill vibes & trending sounds",
-            onClick = onOpenOnlineMix,
-            modifier = Modifier.fillMaxWidth()
-        )
+                // Top row with badge
+                Surface(
+                    shape = RoundedCornerShape(4.dp),
+                    color = Color.Black.copy(alpha = 0.55f),
+                    border = BorderStroke(0.5.dp, accentColor.copy(alpha = 0.5f)),
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                ) {
+                    Text(
+                        text = badge,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = accentColor,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+
+                // Frosted round icon container at bottom-left of artwork
+                Box(
+                    modifier = Modifier
+                        .padding(start = 10.dp, bottom = 6.dp)
+                        .size(34.dp)
+                        .clip(CircleShape)
+                        .background(Color.Black.copy(alpha = 0.65f))
+                        .border(1.dp, accentColor.copy(alpha = 0.5f), CircleShape)
+                        .align(Alignment.BottomStart),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = accentColor,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+
+            // Lower text area with dark background
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .background(Color(0xFF161619))
+                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontSize = 14.5.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontSize = 11.sp,
+                    color = Color.White.copy(alpha = 0.72f),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
     }
 }
 
@@ -1039,13 +1746,13 @@ fun ExploreCompactCard(
 ) {
     Surface(
         shape = RoundedCornerShape(12.dp),
-        color = Color(0xFF18181B),
+        color = HomeSurfaceCard,
         modifier = modifier
             .height(68.dp)
             .clip(RoundedCornerShape(12.dp))
             .border(
-                width = 1.dp,
-                color = accentColor.copy(alpha = 0.20f),
+                width = 0.5.dp,
+                color = HomeBorderSubtle,
                 shape = RoundedCornerShape(12.dp)
             )
             .clickable(onClick = onClick)
@@ -1082,7 +1789,7 @@ fun ExploreCompactCard(
                     style = MaterialTheme.typography.titleSmall,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = HomeTextPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -1091,7 +1798,7 @@ fun ExploreCompactCard(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
                     fontSize = 11.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = HomeTextMuted,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -1107,16 +1814,15 @@ fun OnlineMixCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val goldAccent = Color(0xFFE5B842)
     Surface(
         shape = RoundedCornerShape(14.dp),
-        color = Color(0xFF191714),
+        color = HomeSurfaceCard,
         modifier = modifier
             .height(78.dp)
             .clip(RoundedCornerShape(14.dp))
             .border(
                 width = 1.dp,
-                color = goldAccent.copy(alpha = 0.32f),
+                color = HomeGold.copy(alpha = 0.28f),
                 shape = RoundedCornerShape(14.dp)
             )
             .clickable(onClick = onClick)
@@ -1144,14 +1850,14 @@ fun OnlineMixCard(
                     modifier = Modifier
                         .size(44.dp)
                         .clip(RoundedCornerShape(10.dp))
-                        .background(goldAccent.copy(alpha = 0.16f))
-                        .border(1.dp, goldAccent.copy(alpha = 0.32f), RoundedCornerShape(10.dp)),
+                        .background(HomeGold.copy(alpha = 0.16f))
+                        .border(1.dp, HomeGold.copy(alpha = 0.32f), RoundedCornerShape(10.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.GraphicEq,
                         contentDescription = null,
-                        tint = goldAccent,
+                        tint = HomeGold,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -1169,19 +1875,19 @@ fun OnlineMixCard(
                             style = MaterialTheme.typography.titleMedium,
                             fontSize = 14.5.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = HomeTextPrimary
                         )
                         Surface(
                             shape = RoundedCornerShape(4.dp),
-                            color = goldAccent.copy(alpha = 0.14f),
-                            border = BorderStroke(0.5.dp, goldAccent.copy(alpha = 0.30f))
+                            color = HomeGold.copy(alpha = 0.14f),
+                            border = BorderStroke(0.5.dp, HomeGold.copy(alpha = 0.30f))
                         ) {
                             Text(
                                 text = "6 MIXES",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontSize = 9.5.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = goldAccent,
+                                color = HomeGold,
                                 modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.5.dp)
                             )
                         }
@@ -1191,7 +1897,7 @@ fun OnlineMixCard(
                         text = subtitle,
                         style = MaterialTheme.typography.bodySmall,
                         fontSize = 11.5.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = HomeTextMuted,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -1200,7 +1906,7 @@ fun OnlineMixCard(
                 Icon(
                     imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
                     contentDescription = "Open Online Mix",
-                    tint = goldAccent.copy(alpha = 0.85f),
+                    tint = HomeGold.copy(alpha = 0.85f),
                     modifier = Modifier.size(20.dp)
                 )
             }
