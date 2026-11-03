@@ -19,6 +19,7 @@ def download(ident, folder, qjs, cancelled, progress, max_bytes, reserve_bytes, 
             if os.statvfs(folder).f_bavail*os.statvfs(folder).f_frsize<reserve_bytes: raise RuntimeError('mango_storage')
             progress.update(int(done),int(total))
         opts=options(qjs,cancelled)
+        opts.pop('extractor_args',None)
         opts.update({'skip_download':False,'outtmpl':os.path.join(folder,'audio.%(ext)s'),
                      'format':'bestaudio[protocol=https][ext=m4a]/bestaudio[protocol=https][ext=webm]/bestaudio[protocol^=m3u8]',
                      'hls_prefer_native':True,'fixup':'never','continuedl':False,
